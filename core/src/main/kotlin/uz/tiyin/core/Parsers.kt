@@ -67,7 +67,7 @@ object Parsers {
         "^HUMOCARD \\*(\\d+): (\\w+) ([\\d.]+) (\\w+); (.*?); (\\d\\d-\\d\\d-\\d\\d \\d\\d:\\d\\d); Dostupno: ([\\d.]+) (\\w+)",
     )
     private val humoTransferOut = Regex("P2P|HUMO NA|HUMO UZCAR|to Visa|H2H", RegexOption.IGNORE_CASE)
-    private val humoOwnIn = Regex("KB to HUMO", RegexOption.IGNORE_CASE)
+    private val humoOwnIn = Regex("KB to HUMO|OMONAT|VKLAD|DEPOZIT", RegexOption.IGNORE_CASE)
 
     private fun humo(sms: Sms, body: String): ParseResult? {
         val m = humoRe.find(body) ?: return null
@@ -159,7 +159,7 @@ object Parsers {
 
     // Po vkladu XX-123 proizvedena operatsiya "Prisoedinenie nachislennyh" na summu 1 234 567.89 sum. Ostatok vklada 50 000 000.00 sum, Data 24.11.2026
     private val asakaDepositRe = Regex(
-        "^Po vkladu (\\S+) proizvedena operatsiya \"(.*?)\" na summu ([\\d .]+?) (\\w+)\\. Ostatok vklada ([\\d .]+?) (\\w+), Data (\\d\\d\\.\\d\\d\\.\\d{4})",
+        "^Po vkladu (\\S+) proizvedena operatsiya \"(.*?)\" na summu (-?[\\d .]+?) (\\w+)\\. Ostatok vklada ([\\d .]+?) (\\w+), Data (\\d\\d\\.\\d\\d\\.\\d{4})",
     )
 
     private fun asakabank(sms: Sms, body: String): ParseResult? {

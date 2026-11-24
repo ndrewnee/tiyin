@@ -97,6 +97,16 @@ class ParsersTest {
     }
 
     @Test
+    fun depositToCardIsOwnTransfer() {
+        val out = parsed("ASAKABANK", "Po vkladu XX-1960 proizvedena operatsiya \"Rashod beznalichnymi(Digit\" na summu -1 000 000.00 sum. Ostatok vklada 2 000 000.00 sum, Data 24.11.2026")
+        assertEquals(Kind.OWN_TRANSFER, out.kind)
+        assertEquals(Money(100_000_000, "UZS"), out.amount)
+
+        val toCard = parsed("HUMO", "HUMOCARD *4444: popolnenie 1000000.00 UZS; ASAKABANK OMONAT>Tas; 26-11-24 15:40;  Dostupno: 100000.00 UZS")
+        assertEquals(Kind.OWN_TRANSFER, toCard.kind)
+    }
+
+    @Test
     fun codesAndStrangersAreIgnored() {
         assertIs<ParseResult.Ignored>(Parsers.parse(Sms("Payme", "Payme: kod 123456. Hech kimga bermang", now)))
         assertIs<ParseResult.Ignored>(Parsers.parse(Sms("Beeline", "Balans 1000 sum", now)))
