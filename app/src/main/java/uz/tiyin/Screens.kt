@@ -271,7 +271,7 @@ fun YearScreen(ledger: Ledger, year: Int, today: LocalDate, onPick: () -> Unit, 
             )
             val caption = buildString {
                 append("потрачено за $year год")
-                if (withData.isNotEmpty()) append(", в среднем ${shortSom(total / withData.size)} в месяц")
+                if (withData.size >= 2) append(", в среднем ${shortSom(total / withData.size)} в месяц")
                 if (others.isNotEmpty()) append(", и ещё $others с валютной карты")
             }
             BigTotal(total, caption)
@@ -286,13 +286,12 @@ fun YearScreen(ledger: Ledger, year: Int, today: LocalDate, onPick: () -> Unit, 
                 Text(monthShort[m.ym.monthValue - 1], Modifier.width(40.dp), fontFamily = Golos, fontSize = 14.sp, color = if (has) p.ink else p.muted)
                 Box(Modifier.weight(1f).height(22.dp), contentAlignment = Alignment.CenterStart) {
                     if (has) ClothSwatch(m.threads, p.track, Modifier.fillMaxWidth(m.som.toFloat() / max).fillMaxHeight())
-                    else Box(Modifier.fillMaxWidth().height(1.dp).background(p.faint))
                 }
                 Text(if (has) millions(m.som) else "", Modifier.width(52.dp), style = numeric, fontSize = 15.sp, color = p.ink, textAlign = TextAlign.End)
             }
         }
         item {
-            Text("млн сум, нажмите на месяц, чтобы открыть его", Modifier.padding(start = 40.dp, top = 8.dp, bottom = 28.dp), fontFamily = Golos, fontSize = 13.sp, color = p.muted)
+            Text("в млн сум, месяц открывается нажатием", Modifier.padding(start = 40.dp, top = 8.dp, bottom = 28.dp), fontFamily = Golos, fontSize = 13.sp, color = p.muted)
         }
         categoryRows(spend.values.flatten())
         item { Spacer(Modifier.height(40.dp)) }

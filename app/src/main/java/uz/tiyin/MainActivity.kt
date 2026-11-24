@@ -2,8 +2,10 @@ package uz.tiyin
 
 import android.Manifest
 import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
@@ -61,8 +63,10 @@ import java.time.YearMonth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        enableEdgeToEdge()
+        // The default light navigation scrim draws a white strip under the gesture bar on HyperOS.
+        enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT))
         super.onCreate(savedInstanceState)
+        if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
         setContent {
             TiyinTheme {
                 Box(Modifier.fillMaxSize().background(LocalPalette.current.bg)) { App() }
@@ -185,7 +189,10 @@ private fun MonthCell(m: MonthSummary, isSelected: Boolean, enabled: Boolean, mo
             .padding(6.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        ClothSwatch(m.threads, p.track, Modifier.fillMaxWidth().height(26.dp))
+        if (m.som > 0) ClothSwatch(m.threads, p.track, Modifier.fillMaxWidth().height(26.dp))
+        else Box(Modifier.fillMaxWidth().height(26.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.fillMaxWidth().height(1.dp).background(p.faint))
+        }
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Text(monthShort[m.ym.monthValue - 1], fontFamily = Golos, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = ink)
             Spacer(Modifier.weight(1f))
