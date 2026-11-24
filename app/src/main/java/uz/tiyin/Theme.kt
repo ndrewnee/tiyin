@@ -48,7 +48,7 @@ private val categoryDye = mapOf(
     "Маркетплейсы" to Dye.ROSE,
     "Красота" to Dye.ROSE,
     "Одежда" to Dye.MADDER,
-    "Подписки и сервисы" to Dye.MADDER,
+    "Подписки и сервисы" to Dye.PISTACHIO,
     "Здоровье" to Dye.TURQUOISE,
     "Путешествия" to Dye.SKY,
     "Такси" to Dye.INDIGO,
