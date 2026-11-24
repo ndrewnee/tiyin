@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application>
+        <!-- Debug builds only: lets `adb shell am broadcast -n uz.tiyin/.DebugLookupReceiver` queue the background lookup. -->
+        <receiver
+            android:name=".DebugLookupReceiver"
+            android:exported="true" />
+    </application>
+</manifest>
