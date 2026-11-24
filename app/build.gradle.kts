@@ -5,6 +5,9 @@ plugins {
 }
 
 android {
+    androidResources {
+        generateLocaleConfig = true
+    }
     namespace = "uz.tiyin"
     compileSdk = 35
 

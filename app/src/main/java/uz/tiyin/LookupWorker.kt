@@ -9,7 +9,6 @@ import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.Worker
 import androidx.work.WorkerParameters
-import uz.tiyin.core.Ledger
 import java.util.concurrent.TimeUnit
 
 /**
@@ -20,7 +19,7 @@ import java.util.concurrent.TimeUnit
 class LookupWorker(context: Context, params: WorkerParameters) : Worker(context, params) {
     override fun doWork(): Result {
         val store = SmsStore.get(applicationContext)
-        val ledger = Ledger(store.all(), store.lookedUpCategories())
+        val ledger = store.ledger()
         if (ledger.unknownMerchants.isEmpty()) return Result.success()
         val outcome = MerchantResolver.resolve(store, ledger.unknownMerchants)
         return if (outcome.failed && runAttemptCount < MAX_ATTEMPTS) Result.retry() else Result.success()

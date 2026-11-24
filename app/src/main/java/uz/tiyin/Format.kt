@@ -1,5 +1,7 @@
 package uz.tiyin
 
+import android.content.res.Resources
+import uz.tiyin.core.Categories
 import uz.tiyin.core.Money
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -21,20 +23,20 @@ sealed interface Period {
     }
 }
 
-val monthNames = listOf("Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь")
-val monthShort = listOf("янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек")
-private val monthGenitive = listOf("января", "февраля", "марта", "апреля", "мая", "июня", "июля", "августа", "сентября", "октября", "ноября", "декабря")
-private val monthPrepositional = listOf("январе", "феврале", "марте", "апреле", "мае", "июне", "июле", "августе", "сентябре", "октябре", "ноябре", "декабре")
-private val weekdays = listOf("понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье")
+private fun Resources.month(array: Int, ym: YearMonth) = getStringArray(array)[ym.monthValue - 1]
 
-fun inMonth(ym: YearMonth) = "в " + monthPrepositional[ym.monthValue - 1]
+fun Resources.monthName(ym: YearMonth): String = month(R.array.months, ym)
+fun Resources.monthShort(ym: YearMonth): String = month(R.array.months_short, ym)
+fun Resources.inMonth(ym: YearMonth): String = month(R.array.months_in, ym)
 
-fun dayTitle(day: LocalDate, today: LocalDate): String {
-    val date = "${day.dayOfMonth} ${monthGenitive[day.monthValue - 1]}"
+private val Resources.locale: Locale get() = configuration.locales[0]
+
+fun Resources.dayTitle(day: LocalDate, today: LocalDate): String {
+    val date = getString(R.string.day_date, day.dayOfMonth, getStringArray(R.array.months_day)[day.monthValue - 1])
     return when (day) {
-        today -> "Сегодня, $date"
-        today.minusDays(1) -> "Вчера, $date"
-        else -> "${weekdays[day.dayOfWeek.value - 1].replaceFirstChar { it.uppercase() }}, $date"
+        today -> getString(R.string.today, date)
+        today.minusDays(1) -> getString(R.string.yesterday, date)
+        else -> getString(R.string.weekday_date, getStringArray(R.array.weekdays)[day.dayOfWeek.value - 1], date)
     }
 }
 
@@ -46,21 +48,52 @@ fun amount(m: Money): String {
     val cents = "%02d".format(m.minor % 100)
     return when (m.currency) {
         "UZS" -> whole
-        "USD" -> if (cents == "00") "$$whole" else "$$whole.$cents"
+        "USD" -> if (cents == "00") "\$$whole" else "\$$whole.$cents"
         else -> "$whole.$cents ${m.currency}"
     }
 }
 
-fun money(m: Money): String = if (m.currency == "UZS") "${amount(m)} сум" else amount(m)
+fun Resources.millions(minor: Long): String = "%.1f".format(locale, minor / 100 / 1_000_000.0)
 
-fun millions(minor: Long): String = "%.1f".format(Locale.ROOT, minor / 100 / 1_000_000.0).replace('.', ',')
-
-/** Short som figure for tight spaces: 6,5 млн · 640 тыс. */
-fun shortSom(minor: Long): String {
+/** Short som figure for tight spaces: 6,5 млн, 640 тыс. */
+fun Resources.shortSom(minor: Long): String {
     val som = minor / 100
     return when {
-        som >= 1_000_000 -> "%.1f млн".format(Locale.ROOT, som / 1_000_000.0).replace('.', ',')
-        som >= 1_000 -> "${som / 1_000} тыс"
+        som >= 1_000_000 -> getString(R.string.short_millions, "%.1f".format(locale, som / 1_000_000.0))
+        som >= 1_000 -> getString(R.string.short_thousands, som / 1_000)
         else -> "$som"
     }
 }
+
+private val categoryLabels = mapOf(
+    "Такси" to R.string.cat_taxi,
+    "Продукты и доставка" to R.string.cat_groceries,
+    "Животные" to R.string.cat_pets,
+    "Здоровье" to R.string.cat_health,
+    "Путешествия" to R.string.cat_travel,
+    "Маркетплейсы" to R.string.cat_marketplaces,
+    "Подписки и сервисы" to R.string.cat_subscriptions,
+    "Одежда" to R.string.cat_clothes,
+    "Дом" to R.string.cat_home,
+    "Наличные" to R.string.cat_cash,
+    Categories.VIA_PAYME to R.string.cat_via_payme,
+    Categories.OTHER to R.string.cat_other,
+    Categories.TRANSFERS to R.string.cat_transfers,
+    Categories.INCOME to R.string.cat_income,
+    Categories.OWN to R.string.cat_own,
+    "Кафе и рестораны" to R.string.cat_cafes,
+    "Покупки" to R.string.cat_shopping,
+    "Техника" to R.string.cat_electronics,
+    "Красота" to R.string.cat_beauty,
+    "Транспорт" to R.string.cat_transport,
+    "Связь" to R.string.cat_phone,
+    "Коммунальные" to R.string.cat_utilities,
+    "Жильё" to R.string.cat_housing,
+    "Спорт и развлечения" to R.string.cat_leisure,
+    "Образование" to R.string.cat_education,
+    "Авто" to R.string.cat_car,
+    "Услуги" to R.string.cat_services,
+)
+
+/** Categories are stored under their Russian names; one only Payme knows is shown as Payme named it. */
+fun Resources.categoryLabel(category: String): String = categoryLabels[category]?.let(::getString) ?: category

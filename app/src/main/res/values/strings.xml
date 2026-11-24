@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="som">сум</string>
+    <string name="pick_period">Выбрать месяц или год</string>
+    <string name="spent_in">потрачено %s</string>
+    <string name="nothing_spent_in">трат %s пока нет</string>
+    <string name="spent_year">потрачено за %d год</string>
+    <string name="spent_year_avg">потрачено за %1$d год, в среднем %2$s в месяц</string>
+    <string name="foreign_card">с валютной карты</string>
+    <string name="and">и</string>
+    <string name="sent_to_people">Отправлено людям</string>
+    <string name="came_in">Пришло</string>
+    <string name="unparsed">Не разобрано SMS: %d</string>
+    <string name="language">Язык</string>
+    <string name="import_payme">Загрузить выгрузку из Payme</string>
+    <string name="payme_hidden">%1$s %2$s ушло через Payme без названия магазина.</string>
+    <string name="no_sms_month">За этот месяц SMS нет. Операции можно взять из выгрузки Payme.</string>
+    <string name="sent_meta">Отправлено, %s</string>
+    <string name="came_meta">Пришло, %s</string>
+    <string name="cloth_desc">Траты %s по категориям</string>
+    <string name="year_n">%d год</string>
+    <string name="open_item">Открыть %s</string>
+    <string name="year_footnote">в млн сум, месяц открывается нажатием</string>
+    <string name="year_total">%1$s %2$s за год</string>
+    <string name="no_spending">трат нет</string>
+    <string name="today">Сегодня, %s</string>
+    <string name="yesterday">Вчера, %s</string>
+    <string name="weekday_date">%1$s, %2$s</string>
+    <string name="day_date">%1$d %2$s</string>
+    <string name="short_millions">%s млн</string>
+    <string name="short_thousands">%d тыс</string>
+    <string name="onboarding_title">Tiyin ткёт ваши траты из банковских SMS</string>
+    <string name="onboarding_body">Каждая покупка становится ниткой своего цвета, месяц — полотном. Вводить ничего не нужно, категории проставляются сами.</string>
+    <string name="onboarding_privacy">Читаются только SMS от HUMO, UZCARD, Kapitalbank и Asakabank. Всё остаётся на телефоне, коды подтверждения не сохраняются.</string>
+    <string name="allow_sms">Разрешить чтение SMS</string>
+    <string name="import_cannot_open">Не удалось открыть файл</string>
+    <string name="import_not_payme">Это не выгрузка Payme. Нужен файл, который Payme сохраняет при выгрузке в Excel.</string>
+    <string name="import_empty">В выгрузке Payme нет операций</string>
+    <string name="import_already">Эта выгрузка Payme уже загружена</string>
+    <string name="import_skipped">Не удалось прочитать строк: %d</string>
+    <string name="share_label">Загрузить в Tiyin</string>
+    <string name="cat_taxi">Такси</string>
+    <string name="cat_groceries">Продукты и доставка</string>
+    <string name="cat_pets">Животные</string>
+    <string name="cat_health">Здоровье</string>
+    <string name="cat_travel">Путешествия</string>
+    <string name="cat_marketplaces">Маркетплейсы</string>
+    <string name="cat_subscriptions">Подписки и сервисы</string>
+    <string name="cat_clothes">Одежда</string>
+    <string name="cat_home">Дом</string>
+    <string name="cat_cash">Наличные</string>
+    <string name="cat_via_payme">Оплата через Payme</string>
+    <string name="cat_other">Прочее</string>
+    <string name="cat_transfers">Переводы</string>
+    <string name="cat_income">Поступления</string>
+    <string name="cat_own">Между своими счетами</string>
+    <string name="cat_cafes">Кафе и рестораны</string>
+    <string name="cat_shopping">Покупки</string>
+    <string name="cat_electronics">Техника</string>
+    <string name="cat_beauty">Красота</string>
+    <string name="cat_transport">Транспорт</string>
+    <string name="cat_phone">Связь</string>
+    <string name="cat_utilities">Коммунальные</string>
+    <string name="cat_housing">Жильё</string>
+    <string name="cat_leisure">Спорт и развлечения</string>
+    <string name="cat_education">Образование</string>
+    <string name="cat_car">Авто</string>
+    <string name="cat_services">Услуги</string>
+    <string-array name="months">
+        <item>Январь</item>
+        <item>Февраль</item>
+        <item>Март</item>
+        <item>Апрель</item>
+        <item>Май</item>
+        <item>Июнь</item>
+        <item>Июль</item>
+        <item>Август</item>
+        <item>Сентябрь</item>
+        <item>Октябрь</item>
+        <item>Ноябрь</item>
+        <item>Декабрь</item>
+    </string-array>
+    <string-array name="months_short">
+        <item>янв</item>
+        <item>фев</item>
+        <item>мар</item>
+        <item>апр</item>
+        <item>май</item>
+        <item>июн</item>
+        <item>июл</item>
+        <item>авг</item>
+        <item>сен</item>
+        <item>окт</item>
+        <item>ноя</item>
+        <item>дек</item>
+    </string-array>
+    <string-array name="months_in">
+        <item>в январе</item>
+        <item>в феврале</item>
+        <item>в марте</item>
+        <item>в апреле</item>
+        <item>в мае</item>
+        <item>в июне</item>
+        <item>в июле</item>
+        <item>в августе</item>
+        <item>в сентябре</item>
+        <item>в октябре</item>
+        <item>в ноябре</item>
+        <item>в декабре</item>
+    </string-array>
+    <string-array name="months_day">
+        <item>января</item>
+        <item>февраля</item>
+        <item>марта</item>
+        <item>апреля</item>
+        <item>мая</item>
+        <item>июня</item>
+        <item>июля</item>
+        <item>августа</item>
+        <item>сентября</item>
+        <item>октября</item>
+        <item>ноября</item>
+        <item>декабря</item>
+    </string-array>
+    <string-array name="weekdays">
+        <item>Понедельник</item>
+        <item>Вторник</item>
+        <item>Среда</item>
+        <item>Четверг</item>
+        <item>Пятница</item>
+        <item>Суббота</item>
+        <item>Воскресенье</item>
+    </string-array>
+    <plurals name="import_added">
+        <item quantity="one">Из Payme загружена %d операция</item>
+        <item quantity="few">Из Payme загружено %d операции</item>
+        <item quantity="many">Из Payme загружено %d операций</item>
+        <item quantity="other">Из Payme загружено %d операции</item>
+    </plurals>
+</resources>
