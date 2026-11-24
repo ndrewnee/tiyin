@@ -100,8 +100,9 @@ private fun App() {
         }
         ledger = first
         if (first.unknownMerchants.isEmpty()) return@LaunchedEffect
-        val found = withContext(Dispatchers.IO) { MerchantResolver.resolve(store, first.unknownMerchants) }
-        if (found > 0) ledger = withContext(Dispatchers.IO) { Ledger(store.all(), store.lookedUpCategories()) }
+        val outcome = withContext(Dispatchers.IO) { MerchantResolver.resolve(store, first.unknownMerchants) }
+        if (outcome.failed) LookupWorker.enqueue(context)
+        if (outcome.found > 0) ledger = withContext(Dispatchers.IO) { Ledger(store.all(), store.lookedUpCategories()) }
     }
 
     Column(Modifier.safeDrawingPadding().padding(horizontal = 16.dp)) {

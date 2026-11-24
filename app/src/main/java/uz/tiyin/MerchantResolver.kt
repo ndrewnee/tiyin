@@ -19,9 +19,12 @@ object MerchantResolver {
 
     private val orginfo = Orginfo(::get)
 
-    /** Returns how many merchants got a category; blocking, call off the main thread. */
-    fun resolve(store: SmsStore, unknown: Set<String>): Int {
-        if (!running.compareAndSet(false, true)) return 0
+    /** [failed] means a network or site error stopped the run and the rest should be retried. */
+    data class Outcome(val found: Int, val failed: Boolean)
+
+    /** Blocking; call off the main thread. A run already in progress makes this one a no-op. */
+    fun resolve(store: SmsStore, unknown: Set<String>): Outcome {
+        if (!running.compareAndSet(false, true)) return Outcome(0, failed = false)
         try {
             val now = System.currentTimeMillis()
             val todo = (unknown - store.recentlyChecked(notFoundRetryAfter, now)).sorted().take(MAX_PER_RUN)
@@ -30,9 +33,9 @@ object MerchantResolver {
                 val result = try {
                     orginfo.lookup(merchant)
                 } catch (e: IOException) {
-                    // Offline or the site is down: leave it unchecked so the next open retries.
+                    // Nothing is saved for this merchant, so a later run asks again.
                     Log.w(TAG, "lookup failed for $merchant: ${e.message}")
-                    return found
+                    return Outcome(found, failed = true)
                 }
                 when (result) {
                     is Orginfo.Result.Found -> {
@@ -44,7 +47,7 @@ object MerchantResolver {
                 Log.i(TAG, "lookup $merchant -> $result")
                 Thread.sleep(PAUSE_MS)
             }
-            return found
+            return Outcome(found, failed = false)
         } finally {
             running.set(false)
         }

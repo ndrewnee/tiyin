@@ -18,7 +18,8 @@ class SmsReceiver : BroadcastReceiver() {
         val pending = goAsync()
         Thread {
             try {
-                SmsStore.get(context).save(messages, "receiver")
+                val added = SmsStore.get(context).save(messages, "receiver")
+                if (added > 0) LookupWorker.enqueue(context)
             } finally {
                 pending.finish()
             }
