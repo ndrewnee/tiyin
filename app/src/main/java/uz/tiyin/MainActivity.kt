@@ -93,11 +93,15 @@ private fun App() {
 
     LaunchedEffect(hasPermission, reload) {
         if (!hasPermission) return@LaunchedEffect
-        ledger = withContext(Dispatchers.IO) {
-            val store = SmsStore.get(context)
+        val store = SmsStore.get(context)
+        val first = withContext(Dispatchers.IO) {
             store.importInbox(context)
-            Ledger(store.all())
+            Ledger(store.all(), store.lookedUpCategories())
         }
+        ledger = first
+        if (first.unknownMerchants.isEmpty()) return@LaunchedEffect
+        val found = withContext(Dispatchers.IO) { MerchantResolver.resolve(store, first.unknownMerchants) }
+        if (found > 0) ledger = withContext(Dispatchers.IO) { Ledger(store.all(), store.lookedUpCategories()) }
     }
 
     Column(Modifier.safeDrawingPadding().padding(horizontal = 16.dp)) {
@@ -210,5 +214,10 @@ private fun sumLine(totals: Map<String, List<Ledger.CategoryTotal>>): String =
 
 private fun fmt(m: Money): String {
     val whole = "%,d".format(m.minor / 100).replace(',', ' ')
-    return if (m.currency == "UZS") "$whole сум" else "$whole.%02d %s".format(m.minor % 100, m.currency)
+    val cents = "%02d".format(m.minor % 100)
+    return when (m.currency) {
+        "UZS" -> "$whole сум"
+        "USD" -> "$$whole.$cents"
+        else -> "$whole.$cents ${m.currency}"
+    }
 }

@@ -6,10 +6,14 @@ import java.time.LocalDateTime
  * Everything is derived from the stored raw SMS on every read, so a parser or category fix
  * applies to the whole history without migrations.
  */
-class Ledger(raw: List<Sms>) {
+class Ledger(raw: List<Sms>, lookedUpCategories: Map<String, String> = emptyMap()) {
     val transactions: List<Txn>
     val unparsed: List<Sms>
     val ignored: Int
+
+    /** Merchants of purchases that neither the dictionary nor an earlier lookup could place. */
+    val unknownMerchants: Set<String>
+        get() = transactions.filter { it.kind == Kind.PURCHASE && it.category == Categories.OTHER }.map { it.merchant }.toSet()
 
     init {
         val txns = mutableListOf<Txn>()
@@ -17,7 +21,7 @@ class Ledger(raw: List<Sms>) {
         var skipped = 0
         for (sms in dedupe(raw)) {
             when (val r = Parsers.parse(sms)) {
-                is ParseResult.Parsed -> txns += r.txn.copy(category = Categories.categorize(r.txn))
+                is ParseResult.Parsed -> txns += r.txn.copy(category = Categories.categorize(r.txn, lookedUpCategories))
                 is ParseResult.Unparsed -> failed += sms
                 is ParseResult.Ignored -> skipped++
             }

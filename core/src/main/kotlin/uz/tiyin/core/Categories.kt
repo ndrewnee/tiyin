@@ -21,10 +21,13 @@ object Categories {
         VIA_PAYME to "PAYME",
     ).map { (name, re) -> name to Regex(re, RegexOption.IGNORE_CASE) }
 
-    fun categorize(txn: Txn): String = when (txn.kind) {
+    /** [looked] holds categories found for merchants the dictionary does not know (see [Orginfo]). */
+    fun categorize(txn: Txn, looked: Map<String, String> = emptyMap()): String = when (txn.kind) {
         Kind.OWN_TRANSFER -> OWN
         Kind.INCOME -> INCOME
         Kind.TRANSFER_OUT -> TRANSFERS
-        Kind.PURCHASE -> rules.firstOrNull { (_, re) -> re.containsMatchIn(txn.merchant) }?.first ?: OTHER
+        Kind.PURCHASE -> rules.firstOrNull { (_, re) -> re.containsMatchIn(txn.merchant) }?.first
+            ?: looked[txn.merchant]
+            ?: OTHER
     }
 }

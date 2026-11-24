@@ -18,7 +18,7 @@ data class IncomingSms(val sender: String, val body: String, val epochMs: Long)
  * SMS on the phone without losing history.
  */
 class SmsStore private constructor(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "tiyin.db", null, 1) {
+    SQLiteOpenHelper(context.applicationContext, "tiyin.db", null, 2) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -33,9 +33,50 @@ class SmsStore private constructor(context: Context) :
             )
             """.trimIndent(),
         )
+        createMerchantTable(db)
     }
 
-    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) = Unit
+    override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+        if (oldVersion < 2) createMerchantTable(db)
+    }
+
+    /** One row per merchant looked up in the company register; category is NULL when nothing matched. */
+    private fun createMerchantTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE merchant_lookup (
+                merchant TEXT PRIMARY KEY,
+                category TEXT,
+                org_name TEXT,
+                oked TEXT,
+                checked_at INTEGER NOT NULL
+            )
+            """.trimIndent(),
+        )
+    }
+
+    fun lookedUpCategories(): Map<String, String> =
+        readableDatabase.rawQuery("SELECT merchant, category FROM merchant_lookup WHERE category IS NOT NULL", null).use { c ->
+            buildMap { while (c.moveToNext()) put(c.getString(0), c.getString(1)) }
+        }
+
+    /** Merchants checked recently enough that asking again is pointless, found or not. */
+    fun recentlyChecked(notFoundRetryAfterMs: Long, nowMs: Long): Set<String> =
+        readableDatabase.rawQuery(
+            "SELECT merchant FROM merchant_lookup WHERE category IS NOT NULL OR checked_at > ?",
+            arrayOf((nowMs - notFoundRetryAfterMs).toString()),
+        ).use { c -> buildSet { while (c.moveToNext()) add(c.getString(0)) } }
+
+    fun saveLookup(merchant: String, category: String?, orgName: String?, oked: String?, nowMs: Long) {
+        val v = ContentValues().apply {
+            put("merchant", merchant)
+            put("category", category)
+            put("org_name", orgName)
+            put("oked", oked)
+            put("checked_at", nowMs)
+        }
+        writableDatabase.insertWithOnConflict("merchant_lookup", null, v, SQLiteDatabase.CONFLICT_REPLACE)
+    }
 
     /** Returns how many rows were new. */
     fun save(messages: List<IncomingSms>, source: String): Int {
