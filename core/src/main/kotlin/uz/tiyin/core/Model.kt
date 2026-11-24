@@ -20,7 +20,8 @@ enum class Kind {
 }
 
 data class Txn(
-    val sms: Sms,
+    /** Null for an operation known only from a Payme export. */
+    val sms: Sms?,
     val bank: String,
     val account: String?,
     val kind: Kind,
@@ -29,7 +30,13 @@ data class Txn(
     val at: LocalDateTime,
     val balance: Money?,
     val category: String = "",
-)
+    /** The export row describing the same operation, or the only source when [sms] is null. */
+    val payme: PaymeOp? = null,
+) {
+    /** Stable and unique within a ledger: SMS are deduplicated by text, export rows carry seconds. */
+    val key: String
+        get() = sms?.let { "s:${it.sender}:${it.body}" } ?: "p:$at:$account:$kind:${amount.minor}:$merchant"
+}
 
 sealed interface ParseResult {
     data class Parsed(val txn: Txn) : ParseResult

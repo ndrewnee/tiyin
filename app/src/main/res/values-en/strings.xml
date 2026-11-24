@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="som">som</string>
+    <string name="pick_period">Choose month or year</string>
+    <string name="spent_in">spent %s</string>
+    <string name="nothing_spent_in">nothing spent %s yet</string>
+    <string name="spent_year">spent in %d</string>
+    <string name="spent_year_avg">spent in %1$d, %2$s a month on average</string>
+    <string name="foreign_card">on the currency card</string>
+    <string name="and">and</string>
+    <string name="sent_to_people">Sent to people</string>
+    <string name="came_in">Received</string>
+    <string name="unparsed">Unrecognized SMS: %d</string>
+    <string name="language">Language</string>
+    <string name="import_payme">Import a Payme export</string>
+    <string name="payme_hidden">%1$s %2$s went through Payme without a shop name.</string>
+    <string name="no_sms_month">There are no SMS for this month. Its operations can come from a Payme export.</string>
+    <string name="sent_meta">Sent, %s</string>
+    <string name="came_meta">Received, %s</string>
+    <string name="cloth_desc">Spending %s by category</string>
+    <string name="year_n">%d</string>
+    <string name="open_item">Open %s</string>
+    <string name="year_footnote">in millions of som, tap a month to open it</string>
+    <string name="year_total">%1$s %2$s this year</string>
+    <string name="no_spending">no spending</string>
+    <string name="today">Today, %s</string>
+    <string name="yesterday">Yesterday, %s</string>
+    <string name="weekday_date">%1$s, %2$s</string>
+    <string name="day_date">%2$s %1$d</string>
+    <string name="short_millions">%sM</string>
+    <string name="short_thousands">%dK</string>
+    <string name="onboarding_title">Tiyin weaves your spending from bank SMS</string>
+    <string name="onboarding_body">Every purchase becomes a thread of its own colour, and a month becomes a cloth. There is nothing to type in, because categories are set automatically.</string>
+    <string name="onboarding_privacy">Only SMS from HUMO, UZCARD, Kapitalbank and Asakabank are read. Everything stays on the phone, and confirmation codes are never stored.</string>
+    <string name="allow_sms">Allow reading SMS</string>
+    <string name="import_cannot_open">Could not open the file</string>
+    <string name="import_not_payme">This is not a Payme export. Choose the file Payme saves with its Excel export.</string>
+    <string name="import_empty">The Payme export has no operations</string>
+    <string name="import_already">This Payme export is already imported</string>
+    <string name="import_skipped">Rows that could not be read: %d</string>
+    <string name="share_label">Import to Tiyin</string>
+    <string name="cat_taxi">Taxi</string>
+    <string name="cat_groceries">Groceries and delivery</string>
+    <string name="cat_pets">Pets</string>
+    <string name="cat_health">Health</string>
+    <string name="cat_travel">Travel</string>
+    <string name="cat_marketplaces">Marketplaces</string>
+    <string name="cat_subscriptions">Subscriptions and services</string>
+    <string name="cat_clothes">Clothes</string>
+    <string name="cat_home">Home</string>
+    <string name="cat_cash">Cash</string>
+    <string name="cat_via_payme">Paid via Payme</string>
+    <string name="cat_other">Other</string>
+    <string name="cat_transfers">Transfers</string>
+    <string name="cat_income">Income</string>
+    <string name="cat_own">Between own accounts</string>
+    <string name="cat_cafes">Cafes and restaurants</string>
+    <string name="cat_shopping">Shopping</string>
+    <string name="cat_electronics">Electronics</string>
+    <string name="cat_beauty">Beauty</string>
+    <string name="cat_transport">Transport</string>
+    <string name="cat_phone">Phone and internet</string>
+    <string name="cat_utilities">Utilities</string>
+    <string name="cat_housing">Housing</string>
+    <string name="cat_leisure">Sport and leisure</string>
+    <string name="cat_education">Education</string>
+    <string name="cat_car">Car</string>
+    <string name="cat_services">Services</string>
+    <string-array name="months">
+        <item>January</item>
+        <item>February</item>
+        <item>March</item>
+        <item>April</item>
+        <item>May</item>
+        <item>June</item>
+        <item>July</item>
+        <item>August</item>
+        <item>September</item>
+        <item>October</item>
+        <item>November</item>
+        <item>December</item>
+    </string-array>
+    <string-array name="months_short">
+        <item>Jan</item>
+        <item>Feb</item>
+        <item>Mar</item>
+        <item>Apr</item>
+        <item>May</item>
+        <item>Jun</item>
+        <item>Jul</item>
+        <item>Aug</item>
+        <item>Sep</item>
+        <item>Oct</item>
+        <item>Nov</item>
+        <item>Dec</item>
+    </string-array>
+    <string-array name="months_in">
+        <item>in January</item>
+        <item>in February</item>
+        <item>in March</item>
+        <item>in April</item>
+        <item>in May</item>
+        <item>in June</item>
+        <item>in July</item>
+        <item>in August</item>
+        <item>in September</item>
+        <item>in October</item>
+        <item>in November</item>
+        <item>in December</item>
+    </string-array>
+    <string-array name="months_day">
+        <item>January</item>
+        <item>February</item>
+        <item>March</item>
+        <item>April</item>
+        <item>May</item>
+        <item>June</item>
+        <item>July</item>
+        <item>August</item>
+        <item>September</item>
+        <item>October</item>
+        <item>November</item>
+        <item>December</item>
+    </string-array>
+    <string-array name="weekdays">
+        <item>Monday</item>
+        <item>Tuesday</item>
+        <item>Wednesday</item>
+        <item>Thursday</item>
+        <item>Friday</item>
+        <item>Saturday</item>
+        <item>Sunday</item>
+    </string-array>
+    <plurals name="import_added">
+        <item quantity="one">Imported %d operation from Payme</item>
+        <item quantity="other">Imported %d operations from Payme</item>
+    </plurals>
+</resources>

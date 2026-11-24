@@ -5,7 +5,10 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.provider.Telephony
+import uz.tiyin.core.Ledger
+import uz.tiyin.core.Money
 import uz.tiyin.core.Parsers
+import uz.tiyin.core.PaymeOp
 import uz.tiyin.core.Sms
 import java.time.Instant
 import java.time.LocalDateTime
@@ -14,11 +17,11 @@ import java.time.ZoneId
 data class IncomingSms(val sender: String, val body: String, val epochMs: Long)
 
 /**
- * The app's own copy of bank SMS. It is the only state the app keeps, so the user can wipe
- * SMS on the phone without losing history.
+ * The app's own copy of bank SMS and imported Payme export rows. It is the only state the app keeps,
+ * so the user can wipe SMS on the phone without losing history.
  */
 class SmsStore private constructor(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "tiyin.db", null, 2) {
+    SQLiteOpenHelper(context.applicationContext, "tiyin.db", null, 3) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -34,11 +37,100 @@ class SmsStore private constructor(context: Context) :
             """.trimIndent(),
         )
         createMerchantTable(db)
+        createPaymeTable(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) createMerchantTable(db)
+        if (oldVersion < 3) createPaymeTable(db)
     }
+
+    /**
+     * Exports have no operation id, so the row's own fields are its identity and re-importing an
+     * overlapping period adds nothing. card is '' rather than NULL because SQLite never treats NULLs
+     * as equal in a UNIQUE constraint.
+     */
+    private fun createPaymeTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE payme_op (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                at TEXT NOT NULL,
+                debit INTEGER NOT NULL,
+                supplier TEXT NOT NULL,
+                organization TEXT NOT NULL,
+                amount_minor INTEGER NOT NULL,
+                currency TEXT NOT NULL,
+                category TEXT NOT NULL,
+                card TEXT NOT NULL,
+                card_name TEXT NOT NULL,
+                via_payme INTEGER NOT NULL,
+                imported_at INTEGER NOT NULL,
+                UNIQUE (at, card, debit, amount_minor, supplier)
+            )
+            """.trimIndent(),
+        )
+    }
+
+    /**
+     * Bumped on every write that changes what the ledger shows. SMS caught by the receiver and files
+     * imported in another activity instance never show up as "new" to an open screen otherwise.
+     */
+    @Volatile var revision = 0L
+        private set
+
+    /** Returns how many rows were new. */
+    fun savePayme(ops: List<PaymeOp>, nowMs: Long): Int {
+        var added = 0
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            for (op in ops) {
+                val v = ContentValues().apply {
+                    put("at", op.at.toString())
+                    put("debit", if (op.debit) 1 else 0)
+                    put("supplier", op.supplier)
+                    put("organization", op.organization)
+                    put("amount_minor", op.amount.minor)
+                    put("currency", op.amount.currency)
+                    put("category", op.category)
+                    put("card", op.card ?: "")
+                    put("card_name", op.cardName)
+                    put("via_payme", if (op.viaPayme) 1 else 0)
+                    put("imported_at", nowMs)
+                }
+                if (db.insertWithOnConflict("payme_op", null, v, SQLiteDatabase.CONFLICT_IGNORE) != -1L) added++
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        if (added > 0) revision++
+        return added
+    }
+
+    fun paymeOps(): List<PaymeOp> = readableDatabase.rawQuery(
+        "SELECT at, debit, supplier, organization, amount_minor, currency, category, card, card_name, via_payme FROM payme_op",
+        null,
+    ).use { c ->
+        buildList {
+            while (c.moveToNext()) add(
+                PaymeOp(
+                    at = LocalDateTime.parse(c.getString(0)),
+                    debit = c.getInt(1) == 1,
+                    supplier = c.getString(2),
+                    organization = c.getString(3),
+                    amount = Money(c.getLong(4), c.getString(5)),
+                    category = c.getString(6),
+                    card = c.getString(7).ifEmpty { null },
+                    cardName = c.getString(8),
+                    viaPayme = c.getInt(9) == 1,
+                ),
+            )
+        }
+    }
+
+    fun ledger(): Ledger = Ledger(all(), lookedUpCategories(), paymeOps())
 
     /** One row per merchant looked up in the company register; category is NULL when nothing matched. */
     private fun createMerchantTable(db: SQLiteDatabase) {
@@ -98,6 +190,7 @@ class SmsStore private constructor(context: Context) :
         } finally {
             db.endTransaction()
         }
+        if (added > 0) revision++
         return added
     }
 

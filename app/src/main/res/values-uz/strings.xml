@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="som">so\'m</string>
+    <string name="pick_period">Oy yoki yilni tanlash</string>
+    <string name="spent_in">%s sarflandi</string>
+    <string name="nothing_spent_in">%s hali xarajat yo\'q</string>
+    <string name="spent_year">%d-yilda sarflandi</string>
+    <string name="spent_year_avg">%1$d-yilda sarflandi, oyiga o\'rtacha %2$s</string>
+    <string name="foreign_card">valyuta kartasidan</string>
+    <string name="and">va</string>
+    <string name="sent_to_people">Odamlarga yuborildi</string>
+    <string name="came_in">Kirim</string>
+    <string name="unparsed">Tanilmagan SMS: %d</string>
+    <string name="language">Til</string>
+    <string name="import_payme">Payme ko\'chirmasini yuklash</string>
+    <string name="payme_hidden">%1$s %2$s Payme orqali do\'kon nomisiz to\'langan.</string>
+    <string name="no_sms_month">Bu oy uchun SMS yo\'q. Operatsiyalarni Payme ko\'chirmasidan olish mumkin.</string>
+    <string name="sent_meta">Yuborildi, %s</string>
+    <string name="came_meta">Kirim, %s</string>
+    <string name="cloth_desc">%s xarajatlar toifalar bo\'yicha</string>
+    <string name="year_n">%d-yil</string>
+    <string name="open_item">Ochish: %s</string>
+    <string name="year_footnote">mln so\'mda, oyni ochish uchun bosing</string>
+    <string name="year_total">yil davomida %1$s %2$s</string>
+    <string name="no_spending">xarajat yo\'q</string>
+    <string name="today">Bugun, %s</string>
+    <string name="yesterday">Kecha, %s</string>
+    <string name="weekday_date">%1$s, %2$s</string>
+    <string name="day_date">%1$d-%2$s</string>
+    <string name="short_millions">%s mln</string>
+    <string name="short_thousands">%d ming</string>
+    <string name="onboarding_title">Tiyin xarajatlaringizni bank SMSlaridan to\'qiydi</string>
+    <string name="onboarding_body">Har bir xarid o\'z rangidagi ipga, oy esa matoga aylanadi. Hech narsa kiritish shart emas, toifalar o\'zi qo\'yiladi.</string>
+    <string name="onboarding_privacy">Faqat HUMO, UZCARD, Kapitalbank va Asakabank SMSlari o\'qiladi. Hammasi telefonda qoladi, tasdiqlash kodlari saqlanmaydi.</string>
+    <string name="allow_sms">SMSlarni o\'qishga ruxsat berish</string>
+    <string name="import_cannot_open">Faylni ochib bo\'lmadi</string>
+    <string name="import_not_payme">Bu Payme ko\'chirmasi emas. Payme Excelga yuklaganda saqlaydigan faylni tanlang.</string>
+    <string name="import_empty">Payme ko\'chirmasida operatsiyalar yo\'q</string>
+    <string name="import_already">Bu Payme ko\'chirmasi allaqachon yuklangan</string>
+    <string name="import_skipped">O\'qib bo\'lmagan qatorlar: %d</string>
+    <string name="share_label">Tiyinga yuklash</string>
+    <string name="cat_taxi">Taksi</string>
+    <string name="cat_groceries">Oziq-ovqat va yetkazib berish</string>
+    <string name="cat_pets">Uy hayvonlari</string>
+    <string name="cat_health">Sog\'liq</string>
+    <string name="cat_travel">Sayohat</string>
+    <string name="cat_marketplaces">Marketpleyslar</string>
+    <string name="cat_subscriptions">Obunalar va servislar</string>
+    <string name="cat_clothes">Kiyim</string>
+    <string name="cat_home">Uy-ro\'zg\'or</string>
+    <string name="cat_cash">Naqd pul</string>
+    <string name="cat_via_payme">Payme orqali to\'lov</string>
+    <string name="cat_other">Boshqa</string>
+    <string name="cat_transfers">O\'tkazmalar</string>
+    <string name="cat_income">Tushumlar</string>
+    <string name="cat_own">O\'z hisoblaringiz orasida</string>
+    <string name="cat_cafes">Kafe va restoranlar</string>
+    <string name="cat_shopping">Xaridlar</string>
+    <string name="cat_electronics">Texnika</string>
+    <string name="cat_beauty">Go\'zallik</string>
+    <string name="cat_transport">Transport</string>
+    <string name="cat_phone">Aloqa</string>
+    <string name="cat_utilities">Kommunal xizmatlar</string>
+    <string name="cat_housing">Uy-joy</string>
+    <string name="cat_leisure">Sport va ko\'ngilochar</string>
+    <string name="cat_education">Ta\'lim</string>
+    <string name="cat_car">Avto</string>
+    <string name="cat_services">Xizmatlar</string>
+    <string-array name="months">
+        <item>Yanvar</item>
+        <item>Fevral</item>
+        <item>Mart</item>
+        <item>Aprel</item>
+        <item>May</item>
+        <item>Iyun</item>
+        <item>Iyul</item>
+        <item>Avgust</item>
+        <item>Sentabr</item>
+        <item>Oktabr</item>
+        <item>Noyabr</item>
+        <item>Dekabr</item>
+    </string-array>
+    <string-array name="months_short">
+        <item>yan</item>
+        <item>fev</item>
+        <item>mar</item>
+        <item>apr</item>
+        <item>may</item>
+        <item>iyn</item>
+        <item>iyl</item>
+        <item>avg</item>
+        <item>sen</item>
+        <item>okt</item>
+        <item>noy</item>
+        <item>dek</item>
+    </string-array>
+    <string-array name="months_in">
+        <item>yanvarda</item>
+        <item>fevralda</item>
+        <item>martda</item>
+        <item>aprelda</item>
+        <item>mayda</item>
+        <item>iyunda</item>
+        <item>iyulda</item>
+        <item>avgustda</item>
+        <item>sentabrda</item>
+        <item>oktabrda</item>
+        <item>noyabrda</item>
+        <item>dekabrda</item>
+    </string-array>
+    <string-array name="months_day">
+        <item>yanvar</item>
+        <item>fevral</item>
+        <item>mart</item>
+        <item>aprel</item>
+        <item>may</item>
+        <item>iyun</item>
+        <item>iyul</item>
+        <item>avgust</item>
+        <item>sentabr</item>
+        <item>oktabr</item>
+        <item>noyabr</item>
+        <item>dekabr</item>
+    </string-array>
+    <string-array name="weekdays">
+        <item>Dushanba</item>
+        <item>Seshanba</item>
+        <item>Chorshanba</item>
+        <item>Payshanba</item>
+        <item>Juma</item>
+        <item>Shanba</item>
+        <item>Yakshanba</item>
+    </string-array>
+    <plurals name="import_added">
+        <item quantity="one">Payme\'dan %d ta operatsiya yuklandi</item>
+        <item quantity="other">Payme\'dan %d ta operatsiya yuklandi</item>
+    </plurals>
+</resources>
