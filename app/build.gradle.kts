@@ -18,7 +18,10 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"))
+            // Sideloaded personal app: the debug key lets a release build update the installed debug one in place.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
