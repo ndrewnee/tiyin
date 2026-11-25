@@ -51,7 +51,7 @@
     <string name="short_thousands">%dK</string>
     <string name="onboarding_title">Tiyin weaves your spending from bank SMS</string>
     <string name="onboarding_body">Every purchase becomes a thread of its own colour, and a month becomes a cloth. There is nothing to type in, because categories are set automatically.</string>
-    <string name="onboarding_privacy">Only SMS from HUMO, UZCARD, Kapitalbank and Asakabank are read. Everything stays on the phone, and confirmation codes are never stored.</string>
+    <string name="onboarding_privacy">Only SMS from HUMO, UZCARD, Kapitalbank and Asakabank are read. Your operations are stored only on the phone, and confirmation codes are never stored. To pick a category, the app looks up the names of shops it does not know on orginfo.uz.</string>
     <string name="allow_sms">Allow reading SMS</string>
     <string name="import_cannot_open">Could not open the file</string>
     <string name="import_not_payme">This is not a Payme export. Choose the file Payme saves with its Excel export.</string>

@@ -20,6 +20,8 @@ import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -375,29 +377,31 @@ private fun Onboarding(onAllow: () -> Unit) {
     val dyes = listOf("Продукты и доставка", "Кафе и рестораны", "", "Покупки", "Здоровье", "Продукты и доставка", "Такси")
     val weights = listOf(3f, 2f, 1f, 2.4f, 1.6f, 1f, 2f)
     Column(Modifier.fillMaxSize()) {
-        IkatCloth(
-            dyes.zip(weights).map { (cat, w) -> Strand(w, if (cat.isEmpty()) p.bg else p.dye(cat)) },
-            Modifier.fillMaxWidth().height(300.dp),
-            steps = 20, featherFraction = 0.03f,
-        )
-        Column(Modifier.weight(1f).fillMaxWidth().navigationBarsPadding().padding(start = 24.dp, end = 24.dp, top = 28.dp, bottom = 24.dp)) {
-            Text(stringResource(R.string.onboarding_title), fontFamily = Jost, fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Medium, color = p.ink)
-            Text(
-                stringResource(R.string.onboarding_body),
-                Modifier.padding(top = 16.dp), fontFamily = Golos, fontSize = 16.sp, lineHeight = 24.sp, color = p.muted,
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            IkatCloth(
+                dyes.zip(weights).map { (cat, w) -> Strand(w, if (cat.isEmpty()) p.bg else p.dye(cat)) },
+                Modifier.fillMaxWidth().height(300.dp),
+                steps = 20, featherFraction = 0.03f,
             )
-            Text(
-                stringResource(R.string.onboarding_privacy),
-                Modifier.padding(top = 12.dp), fontFamily = Golos, fontSize = 16.sp, lineHeight = 24.sp, color = p.muted,
-            )
-            Spacer(Modifier.weight(1f))
-            Box(
-                Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(4.dp)).background(p.ink)
-                    .clickable(role = Role.Button, onClick = onAllow),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(stringResource(R.string.allow_sms), fontFamily = Golos, fontSize = 17.sp, fontWeight = FontWeight.Medium, color = p.bg)
+            Column(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 28.dp)) {
+                Text(stringResource(R.string.onboarding_title), fontFamily = Jost, fontSize = 34.sp, lineHeight = 38.sp, fontWeight = FontWeight.Medium, color = p.ink)
+                Text(
+                    stringResource(R.string.onboarding_body),
+                    Modifier.padding(top = 16.dp), fontFamily = Golos, fontSize = 16.sp, lineHeight = 24.sp, color = p.muted,
+                )
+                Text(
+                    stringResource(R.string.onboarding_privacy),
+                    Modifier.padding(top = 12.dp), fontFamily = Golos, fontSize = 16.sp, lineHeight = 24.sp, color = p.muted,
+                )
             }
+        }
+        Box(
+            Modifier.navigationBarsPadding().padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 24.dp)
+                .fillMaxWidth().height(56.dp).clip(RoundedCornerShape(4.dp)).background(p.ink)
+                .clickable(role = Role.Button, onClick = onAllow),
+            contentAlignment = Alignment.Center,
+        ) {
+            Text(stringResource(R.string.allow_sms), fontFamily = Golos, fontSize = 17.sp, fontWeight = FontWeight.Medium, color = p.bg)
         }
     }
 }
