@@ -12,6 +12,12 @@
     <string name="came_in">Пришло</string>
     <string name="unparsed">Не разобрано SMS: %d</string>
     <string name="language">Язык</string>
+    <string name="backup_save">Сохранить копию</string>
+    <string name="backup_load">Загрузить копию</string>
+    <string name="backup_saved">Копия сохранена. SMS: %1$d, Payme: %2$d, пометки: %3$d</string>
+    <string name="backup_loaded">Добавлено из копии. SMS: %1$d, Payme: %2$d, пометки: %3$d</string>
+    <string name="backup_bad">Это не копия Tiyin</string>
+    <string name="backup_failed">Не удалось сохранить копию</string>
     <string name="edit">Изменить</string>
     <string name="mark_what">Что это</string>
     <string name="kind_purchase">Трата</string>
