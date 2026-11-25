@@ -51,7 +51,7 @@
     <string name="short_thousands">%d ming</string>
     <string name="onboarding_title">Tiyin xarajatlaringizni bank SMSlaridan to\'qiydi</string>
     <string name="onboarding_body">Har bir xarid o\'z rangidagi ipga, oy esa matoga aylanadi. Hech narsa kiritish shart emas, toifalar o\'zi qo\'yiladi.</string>
-    <string name="onboarding_privacy">Faqat HUMO, UZCARD, Kapitalbank va Asakabank SMSlari o\'qiladi. Hammasi telefonda qoladi, tasdiqlash kodlari saqlanmaydi.</string>
+    <string name="onboarding_privacy">Faqat HUMO, UZCARD, Kapitalbank va Asakabank SMSlari o\'qiladi. Amallar faqat telefonda saqlanadi, tasdiqlash kodlari saqlanmaydi. Toifani aniqlash uchun ilova notanish do\'konlar nomini orginfo.uz saytidan qidiradi.</string>
     <string name="allow_sms">SMSlarni o\'qishga ruxsat berish</string>
     <string name="import_cannot_open">Faylni ochib bo\'lmadi</string>
     <string name="import_not_payme">Bu Payme ko\'chirmasi emas. Payme Excelga yuklaganda saqlaydigan faylni tanlang.</string>
