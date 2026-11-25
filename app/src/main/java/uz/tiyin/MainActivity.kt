@@ -62,7 +62,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -142,39 +141,6 @@ private fun importPayme(context: Context, uri: Uri): String {
     return main + skipped
 }
 
-private fun saveBackup(context: Context, uri: Uri): String {
-    val res = context.resources
-    return try {
-        val counts = context.contentResolver.openOutputStream(uri)?.use { Backup.write(SmsStore.get(context), it) }
-            ?: return res.getString(R.string.backup_failed)
-        res.getString(R.string.backup_saved, counts.sms, counts.payme, counts.marks)
-    } catch (e: IOException) {
-        Log.w("Tiyin", "cannot write backup to $uri", e)
-        res.getString(R.string.backup_failed)
-    } catch (e: SecurityException) {
-        Log.w("Tiyin", "no access to $uri", e)
-        res.getString(R.string.backup_failed)
-    }
-}
-
-private fun loadBackup(context: Context, uri: Uri): String {
-    val res = context.resources
-    return try {
-        val counts = context.contentResolver.openInputStream(uri)?.use { Backup.read(SmsStore.get(context), it) }
-            ?: return res.getString(R.string.import_cannot_open)
-        res.getString(R.string.backup_loaded, counts.sms, counts.payme, counts.marks)
-    } catch (e: Backup.NotBackup) {
-        Log.w("Tiyin", "not a backup: ${e.message}")
-        res.getString(R.string.backup_bad)
-    } catch (e: IOException) {
-        Log.w("Tiyin", "cannot read $uri", e)
-        res.getString(R.string.import_cannot_open)
-    } catch (e: SecurityException) {
-        Log.w("Tiyin", "no access to $uri", e)
-        res.getString(R.string.import_cannot_open)
-    }
-}
-
 private val smsPermissions = arrayOf(Manifest.permission.READ_SMS, Manifest.permission.RECEIVE_SMS)
 
 @Composable
@@ -192,17 +158,6 @@ private fun App(incoming: Uri?, onImported: () -> Unit) {
     var picked by remember { mutableStateOf<Uri?>(null) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { picked = it }
     val toImport = picked ?: incoming
-    val scope = rememberCoroutineScope()
-    fun inBackground(uri: Uri?, work: (Context, Uri) -> String) {
-        uri ?: return
-        scope.launch {
-            val message = withContext(Dispatchers.IO) { work(context, uri) }
-            reload++
-            Toast.makeText(context, message, Toast.LENGTH_LONG).show()
-        }
-    }
-    val backupSaver = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { inBackground(it, ::saveBackup) }
-    val backupLoader = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { inBackground(it, ::loadBackup) }
     LaunchedEffect(toImport) {
         val uri = toImport ?: return@LaunchedEffect
         val message = withContext(Dispatchers.IO) { importPayme(context, uri) }
@@ -243,19 +198,13 @@ private fun App(incoming: Uri?, onImported: () -> Unit) {
     when {
         !hasPermission -> Onboarding { launcher.launch(smsPermissions) }
         ledger == null -> Box(Modifier.fillMaxSize())
-        else -> Ledgers(
-            ledger!!,
-            onImport = { picker.launch(arrayOf(XLSX, "application/octet-stream")) },
-            onChanged = { reload++ },
-            onSaveBackup = { backupSaver.launch("tiyin-${LocalDate.now()}.json") },
-            onLoadBackup = { backupLoader.launch(arrayOf("application/json", "application/octet-stream", "text/plain")) },
-        )
+        else -> Ledgers(ledger!!, onImport = { picker.launch(arrayOf(XLSX, "application/octet-stream")) }, onChanged = { reload++ })
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit, onSaveBackup: () -> Unit, onLoadBackup: () -> Unit) {
+private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var editing by remember { mutableStateOf<Txn?>(null) }
@@ -284,12 +233,7 @@ private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit,
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = p.bg, scrimColor = p.sheetScrim, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         ) {
-            PeriodPicker(
-                ledger, today, period,
-                onImport = { picking = false; onImport() },
-                onSaveBackup = { picking = false; onSaveBackup() },
-                onLoadBackup = { picking = false; onLoadBackup() },
-            ) { picked -> period = picked; picking = false }
+            PeriodPicker(ledger, today, period, onImport = { picking = false; onImport() }) { picked -> period = picked; picking = false }
         }
     }
     editing?.let { txn ->
@@ -311,10 +255,7 @@ private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit,
 }
 
 @Composable
-private fun PeriodPicker(
-    ledger: Ledger, today: LocalDate, selected: Period,
-    onImport: () -> Unit, onSaveBackup: () -> Unit, onLoadBackup: () -> Unit, onPick: (Period) -> Unit,
-) {
+private fun PeriodPicker(ledger: Ledger, today: LocalDate, selected: Period, onImport: () -> Unit, onPick: (Period) -> Unit) {
     val p = LocalPalette.current
     val res = resources()
     val firstYear = ledger.transactions.minOfOrNull { it.at.year } ?: today.year
@@ -328,18 +269,6 @@ private fun PeriodPicker(
             )
         }
         item(key = "language") { LanguageRow() }
-        item(key = "backup") {
-            Row(Modifier.fillMaxWidth().padding(bottom = 20.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                listOf(R.string.backup_save to onSaveBackup, R.string.backup_load to onLoadBackup).forEach { (label, action) ->
-                    Text(
-                        stringResource(label),
-                        Modifier.weight(1f).clip(RoundedCornerShape(4.dp)).clickable(role = Role.Button, onClick = action)
-                            .padding(vertical = 10.dp),
-                        textAlign = TextAlign.Center, fontFamily = Golos, fontSize = 14.sp, color = p.ink, textDecoration = TextDecoration.Underline,
-                    )
-                }
-            }
-        }
         items((today.year downTo firstYear).toList(), key = { it }) { year ->
             val months = remember(ledger, year, p) { monthSummaries(ledger, year, p) }
             val total = months.sumOf { it.som }

@@ -12,12 +12,6 @@
     <string name="came_in">Kirim</string>
     <string name="unparsed">Tanilmagan SMS: %d</string>
     <string name="language">Til</string>
-    <string name="backup_save">Nusxani saqlash</string>
-    <string name="backup_load">Nusxani tiklash</string>
-    <string name="backup_saved">Nusxa saqlandi. SMS: %1$d, Payme: %2$d, belgilar: %3$d</string>
-    <string name="backup_loaded">Nusxadan qo\'shildi. SMS: %1$d, Payme: %2$d, belgilar: %3$d</string>
-    <string name="backup_bad">Bu Tiyin nusxasi emas</string>
-    <string name="backup_failed">Nusxani saqlab bo\'lmadi</string>
     <string name="edit">O\'zgartirish</string>
     <string name="mark_what">Bu nima</string>
     <string name="kind_purchase">Xarajat</string>
