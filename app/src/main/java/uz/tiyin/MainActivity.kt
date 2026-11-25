@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -259,7 +260,17 @@ private fun PeriodPicker(ledger: Ledger, today: LocalDate, selected: Period, onI
     val p = LocalPalette.current
     val res = resources()
     val firstYear = ledger.transactions.minOfOrNull { it.at.year } ?: today.year
-    LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 20.dp).navigationBarsPadding()) {
+    // Newest first throughout, so reading down goes back in time without jumping forward at a year boundary.
+    val years = (today.year downTo firstYear).toList()
+    val thisMonth = YearMonth.from(today)
+    val shownYear = YearMonth.from(selected.from).year
+    val list = rememberLazyListState()
+    LaunchedEffect(Unit) {
+        val layout = list.layoutInfo
+        val item = layout.visibleItemsInfo.find { it.key == shownYear }
+        if (item == null || item.offset + item.size > layout.viewportEndOffset) list.scrollToItem(HEADER_ITEMS + years.indexOf(shownYear))
+    }
+    LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 20.dp).navigationBarsPadding(), state = list) {
         item(key = "import") {
             Text(
                 stringResource(R.string.import_payme),
@@ -269,8 +280,8 @@ private fun PeriodPicker(ledger: Ledger, today: LocalDate, selected: Period, onI
             )
         }
         item(key = "language") { LanguageRow() }
-        items((today.year downTo firstYear).toList(), key = { it }) { year ->
-            val months = remember(ledger, year, p) { monthSummaries(ledger, year, p) }
+        items(years, key = { it }) { year ->
+            val months = remember(ledger, year, p) { monthSummaries(ledger, year, p).filter { !it.ym.isAfter(thisMonth) }.reversed() }
             val total = months.sumOf { it.som }
             Column(Modifier.padding(bottom = 28.dp)) {
                 Row(
@@ -285,13 +296,16 @@ private fun PeriodPicker(ledger: Ledger, today: LocalDate, selected: Period, onI
                 Spacer(Modifier.height(10.dp))
                 months.chunked(4).forEach { row ->
                     Row(Modifier.fillMaxWidth().padding(bottom = 10.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        row.forEach { m -> MonthCell(m, isSelected = selected == Period.Month(m.ym), enabled = m.som > 0 && !m.ym.isAfter(YearMonth.from(today)), Modifier.weight(1f)) { onPick(Period.Month(m.ym)) } }
+                        row.forEach { m -> MonthCell(m, isSelected = selected == Period.Month(m.ym), enabled = m.som > 0, Modifier.weight(1f)) { onPick(Period.Month(m.ym)) } }
+                        repeat(4 - row.size) { Spacer(Modifier.weight(1f)) }
                     }
                 }
             }
         }
     }
 }
+
+private const val HEADER_ITEMS = 2
 
 @Composable
 private fun LanguageRow() {
