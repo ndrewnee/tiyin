@@ -21,20 +21,26 @@ import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
@@ -50,6 +56,7 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -84,9 +91,21 @@ private fun chevron(points: List<Pair<Float, Float>>) = ImageVector.Builder(
 private val ChevronLeft = chevron(listOf(15f to 5f, 8f to 12f, 15f to 19f))
 private val ChevronRight = chevron(listOf(9f to 5f, 16f to 12f, 9f to 19f))
 private val ChevronDown = chevron(listOf(7f to 10f, 12f to 15f, 17f to 10f))
+private val Magnifier = ImageVector.Builder(
+    defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,
+).path(stroke = SolidColor(Color.Black), strokeLineWidth = 2f, strokeLineCap = StrokeCap.Round) {
+    moveTo(16.5f, 10.5f)
+    arcTo(6f, 6f, 0f, isMoreThanHalf = true, isPositiveArc = true, 4.5f, 10.5f)
+    arcTo(6f, 6f, 0f, isMoreThanHalf = true, isPositiveArc = true, 16.5f, 10.5f)
+    moveTo(15f, 15f)
+    lineTo(20f, 20f)
+}.build()
 
 @Composable
-private fun PeriodHeader(title: String, prevLabel: String, nextLabel: String, hasNext: Boolean, onTitle: () -> Unit, onPrev: () -> Unit, onNext: () -> Unit) {
+private fun PeriodHeader(
+    title: String, prevLabel: String, nextLabel: String, hasNext: Boolean,
+    onTitle: () -> Unit, onSearch: () -> Unit, onPrev: () -> Unit, onNext: () -> Unit,
+) {
     val p = LocalPalette.current
     Row(Modifier.fillMaxWidth().padding(bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
         Row(
@@ -98,6 +117,7 @@ private fun PeriodHeader(title: String, prevLabel: String, nextLabel: String, ha
             Icon(ChevronDown, null, Modifier.size(24.dp), tint = p.ink)
         }
         Spacer(Modifier.weight(1f))
+        IconButton(onClick = onSearch) { Icon(Magnifier, stringResource(R.string.search), tint = p.ink) }
         IconButton(onClick = onPrev) { Icon(ChevronLeft, prevLabel, tint = p.ink) }
         IconButton(onClick = onNext, enabled = hasNext, colors = IconButtonDefaults.iconButtonColors(disabledContentColor = p.faint)) {
             Icon(ChevronRight, nextLabel, tint = if (hasNext) p.ink else p.faint)
@@ -176,7 +196,8 @@ private fun otherCurrencies(totals: Map<String, List<Ledger.CategoryTotal>>, and
 @Composable
 fun MonthScreen(
     ledger: Ledger, ym: YearMonth, today: LocalDate,
-    onPick: () -> Unit, onMonth: (YearMonth) -> Unit, onImport: () -> Unit, onTxn: (Txn) -> Unit,
+    category: String?, onCategory: (String?) -> Unit,
+    onPick: () -> Unit, onMonth: (YearMonth) -> Unit, onImport: () -> Unit, onTxn: (Txn) -> Unit, onSearch: () -> Unit,
 ) {
     val p = LocalPalette.current
     val res = resources()
@@ -188,9 +209,8 @@ fun MonthScreen(
     val others = otherCurrencies(spend, res.getString(R.string.and))
     val isCurrent = ym == YearMonth.from(today)
     var showUnparsed by remember { mutableStateOf(false) }
-    var picked by remember(ym) { mutableStateOf<String?>(null) }
-    // A category that disappeared after a change (a mark, an import) drops the filter instead of leaving an empty list.
-    val only = picked?.takeIf { c -> spend.values.flatten().any { it.category == c } }
+    // The chosen category follows the user across months and years; a month without it shows everything.
+    val only = category?.takeIf { c -> spend.values.flatten().any { it.category == c } }
     val days = if (only == null) d.days else {
         d.days.mapValues { (_, list) -> list.filter { it.kind == Kind.PURCHASE && it.category == only } }.filterValues { it.isNotEmpty() }
     }
@@ -201,7 +221,7 @@ fun MonthScreen(
                 title = res.monthName(ym) + if (ym.year != today.year) " ${ym.year}" else "",
                 prevLabel = res.monthName(ym.minusMonths(1)),
                 nextLabel = res.monthName(ym.plusMonths(1)),
-                hasNext = !isCurrent, onTitle = onPick,
+                hasNext = !isCurrent, onTitle = onPick, onSearch = onSearch,
                 onPrev = { onMonth(ym.minusMonths(1)) }, onNext = { onMonth(ym.plusMonths(1)) },
             )
             if (uzs.isEmpty()) {
@@ -225,7 +245,17 @@ fun MonthScreen(
             if (d.days.isEmpty()) PaymePrompt(res.getString(R.string.no_sms_month), onImport)
             Spacer(Modifier.height(24.dp))
         }
-        categoryRows(spend.values.flatten(), only) { picked = if (it == only) null else it }
+        categoryRows(spend.values.flatten(), only) { onCategory(if (it == only) null else it) }
+        if (category != null && only == null) item(key = "filter-absent") {
+            Column(Modifier.padding(top = 20.dp)) {
+                Text(stringResource(R.string.filter_absent, res.categoryLabel(category)), fontFamily = Golos, fontSize = 14.sp, color = p.muted)
+                Text(
+                    stringResource(R.string.filter_clear),
+                    Modifier.clip(RoundedCornerShape(4.dp)).clickable(role = Role.Button) { onCategory(null) }.padding(vertical = 8.dp),
+                    fontFamily = Golos, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = p.ink, textDecoration = TextDecoration.Underline,
+                )
+            }
+        }
         if (only == Categories.VIA_PAYME) item(key = "payme-import") {
             Text(
                 stringResource(R.string.import_payme),
@@ -323,7 +353,10 @@ fun monthSummaries(ledger: Ledger, year: Int, p: Palette): List<MonthSummary> = 
 }
 
 @Composable
-fun YearScreen(ledger: Ledger, year: Int, today: LocalDate, onPick: () -> Unit, onYear: (Int) -> Unit, onMonth: (YearMonth) -> Unit) {
+fun YearScreen(
+    ledger: Ledger, year: Int, today: LocalDate, category: String?, onCategory: (String?) -> Unit,
+    onPick: () -> Unit, onYear: (Int) -> Unit, onMonth: (YearMonth) -> Unit, onSearch: () -> Unit,
+) {
     val p = LocalPalette.current
     val res = resources()
     val spend = remember(ledger, year) { Period.Year(year).let { Ledger.totals(ledger.between(it.from, it.to), setOf(Kind.PURCHASE)) } }
@@ -333,8 +366,7 @@ fun YearScreen(ledger: Ledger, year: Int, today: LocalDate, onPick: () -> Unit, 
     val others = otherCurrencies(spend, res.getString(R.string.and))
     // Month bars are in som, so only a category with som spending can be shown by month.
     val inSom = spend["UZS"].orEmpty().map { it.category }.toSet()
-    var picked by remember(year) { mutableStateOf<String?>(null) }
-    val only = picked?.takeIf { it in inSom }
+    val only = category?.takeIf { it in inSom }
     fun shown(m: MonthSummary) = if (only == null) m.som else m.byCategory[only] ?: 0L
     val max = months.maxOf(::shown).coerceAtLeast(1)
     val list = rememberLazyListState()
@@ -344,7 +376,7 @@ fun YearScreen(ledger: Ledger, year: Int, today: LocalDate, onPick: () -> Unit, 
         item {
             PeriodHeader(
                 title = "$year", prevLabel = res.getString(R.string.year_n, year - 1), nextLabel = res.getString(R.string.year_n, year + 1),
-                hasNext = year < today.year, onTitle = onPick,
+                hasNext = year < today.year, onTitle = onPick, onSearch = onSearch,
                 onPrev = { onYear(year - 1) }, onNext = { onYear(year + 1) },
             )
             val caption = if (withData.size >= 2) res.getString(R.string.spent_year_avg, year, res.shortSom(total / withData.size))
@@ -377,9 +409,70 @@ fun YearScreen(ledger: Ledger, year: Int, today: LocalDate, onPick: () -> Unit, 
             Text(note, Modifier.padding(start = 40.dp, top = 8.dp, bottom = 28.dp), fontFamily = Golos, fontSize = 13.sp, color = p.muted)
         }
         categoryRows(spend.values.flatten(), only, canTap = { it in inSom }) {
-            picked = if (it == only) null else it
+            val next = if (it == only) null else it
+            onCategory(next)
             // The month bars sit above the categories; bring them into view so the change is visible.
-            if (picked != null) scope.launch { list.animateScrollToItem(1) }
+            if (next != null) scope.launch { list.animateScrollToItem(1) }
+        }
+        item { Spacer(Modifier.height(40.dp)) }
+    }
+}
+
+/** Every operation whose shop or person name contains the query, across all time, newest first. */
+@Composable
+fun SearchScreen(ledger: Ledger, today: LocalDate, onClose: () -> Unit, onTxn: (Txn) -> Unit) {
+    val p = LocalPalette.current
+    val res = resources()
+    var query by rememberSaveable { mutableStateOf("") }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { focus.requestFocus() }
+    val q = query.trim()
+    val found = remember(ledger, q) {
+        if (q.length < 2) emptyList() else ledger.transactions.filter { it.merchant.contains(q, ignoreCase = true) }.sortedByDescending { it.at }
+    }
+    fun som(kinds: Set<Kind>) = found.filter { it.amount.currency == "UZS" && it.kind in kinds }.sumOf { it.amount.minor }
+
+    LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
+        item {
+            Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onClose) { Icon(ChevronLeft, stringResource(R.string.close), tint = p.ink) }
+                BasicTextField(
+                    query, { query = it }, Modifier.weight(1f).focusRequester(focus).padding(vertical = 12.dp),
+                    singleLine = true, cursorBrush = SolidColor(p.ink),
+                    textStyle = TextStyle(fontFamily = Golos, fontSize = 20.sp, color = p.ink),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    decorationBox = { field ->
+                        Box {
+                            if (query.isEmpty()) Text(stringResource(R.string.search_hint), fontFamily = Golos, fontSize = 20.sp, color = p.muted)
+                            field()
+                        }
+                    },
+                )
+            }
+            Box(Modifier.fillMaxWidth().height(1.dp).background(p.track))
+            if (q.length >= 2) {
+                Column(Modifier.padding(top = 16.dp)) {
+                    if (found.isEmpty()) {
+                        Text(stringResource(R.string.search_nothing), fontFamily = Golos, fontSize = 15.sp, color = p.muted)
+                    } else {
+                        Text(stringResource(R.string.search_count, found.size), fontFamily = Golos, fontSize = 15.sp, color = p.muted)
+                        val out = som(setOf(Kind.PURCHASE, Kind.TRANSFER_OUT))
+                        val came = som(setOf(Kind.INCOME))
+                        if (out > 0) Text(stringResource(R.string.search_out, groupDigits(out / 100)), style = numeric, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = p.ink)
+                        if (came > 0) Text(stringResource(R.string.search_came, groupDigits(came / 100)), style = numeric, fontSize = 20.sp, fontWeight = FontWeight.Medium, color = p.income)
+                    }
+                }
+            }
+        }
+        found.groupBy { it.at.toLocalDate() }.forEach { (day, list) ->
+            item(key = "day-$day") {
+                Text(
+                    res.dayTitle(day, today) + if (day.year != today.year) " ${day.year}" else "",
+                    Modifier.padding(top = 28.dp, bottom = 6.dp).semantics { heading() },
+                    fontFamily = Golos, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = p.ink,
+                )
+            }
+            items(list, key = { "t-${it.key}" }) { TxnRow(it) { onTxn(it) } }
         }
         item { Spacer(Modifier.height(40.dp)) }
     }
