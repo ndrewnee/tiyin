@@ -23,7 +23,6 @@
     <string name="mark_reset">Avvalgi holatga qaytarish</string>
     <string name="mark_manual">qo\'lda</string>
     <string name="import_payme">Payme ko\'chirmasini yuklash</string>
-    <string name="payme_hidden">%1$s %2$s Payme orqali do\'kon nomisiz to\'langan.</string>
     <string name="no_sms_month">Bu oy uchun SMS yo\'q. Operatsiyalarni Payme ko\'chirmasidan olish mumkin.</string>
     <string name="sent_meta">Yuborildi, %s</string>
     <string name="came_meta">Kirim, %s</string>
