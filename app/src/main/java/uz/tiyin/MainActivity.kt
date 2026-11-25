@@ -89,7 +89,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge(navigationBarStyle = SystemBarStyle.auto(android.graphics.Color.TRANSPARENT, android.graphics.Color.TRANSPARENT))
         super.onCreate(savedInstanceState)
         if (Build.VERSION.SDK_INT >= 29) window.isNavigationBarContrastEnforced = false
-        if (savedInstanceState == null) incoming.value = sharedFile(intent)
+        if (savedInstanceState == null) {
+            Language.restore(this)
+            incoming.value = sharedFile(intent)
+        }
         setContent {
             TiyinTheme {
                 Box(Modifier.fillMaxSize().background(LocalPalette.current.bg)) {
