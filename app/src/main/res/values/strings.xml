@@ -32,6 +32,7 @@
     <string name="year_n">%d год</string>
     <string name="open_item">Открыть %s</string>
     <string name="year_footnote">в млн сум, месяц открывается нажатием</string>
+    <string name="year_category_footnote">«%1$s» по месяцам, в сумах</string>
     <string name="year_total">%1$s %2$s за год</string>
     <string name="no_spending">трат нет</string>
     <string name="today">Сегодня, %s</string>

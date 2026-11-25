@@ -32,6 +32,7 @@
     <string name="year_n">%d</string>
     <string name="open_item">Open %s</string>
     <string name="year_footnote">in millions of som, tap a month to open it</string>
+    <string name="year_category_footnote">“%1$s” by month, in som</string>
     <string name="year_total">%1$s %2$s this year</string>
     <string name="no_spending">no spending</string>
     <string name="today">Today, %s</string>

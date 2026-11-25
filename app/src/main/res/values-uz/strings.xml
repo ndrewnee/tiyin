@@ -32,6 +32,7 @@
     <string name="year_n">%d-yil</string>
     <string name="open_item">Ochish: %s</string>
     <string name="year_footnote">mln so\'mda, oyni ochish uchun bosing</string>
+    <string name="year_category_footnote">«%1$s» oylar bo\'yicha, so\'mda</string>
     <string name="year_total">yil davomida %1$s %2$s</string>
     <string name="no_spending">xarajat yo\'q</string>
     <string name="today">Bugun, %s</string>
