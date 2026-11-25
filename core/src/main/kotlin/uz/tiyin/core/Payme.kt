@@ -113,6 +113,13 @@ object PaymeExport {
     private fun clean(s: String) = s.replace(Regex("\\s+"), " ").trim()
 
     private val savings = Regex("DEPOSIT|DEPOZIT|VKLAD|OMONAT", RegexOption.IGNORE_CASE)
+    private val conversion = setOf("конвертация", "конверсия")
+
+    // Payme names a withdrawal from an Asaka deposit to the card after the bank's head office.
+    private val bankHeadOffice = Regex("BANKINING BOSH OFISI", RegexOption.IGNORE_CASE)
+
+    // Payme files card-to-card transfers it did not make itself under "прочее".
+    private val cardToCard = Regex("P2P|H2H|HUMO2UZCARD|\\bTO VISA\\b", RegexOption.IGNORE_CASE)
 
     /**
      * Kind for an operation no SMS describes. Checked against every operation that both sources saw;
@@ -120,9 +127,9 @@ object PaymeExport {
      * export does not show the sender, so such rows are kept out of income.
      */
     fun kind(op: PaymeOp): Kind = when {
-        op.category == "вклады" || savings.containsMatchIn(op.supplier) -> Kind.OWN_TRANSFER
-        !op.debit -> if (op.supplier == "Перевод на карту") Kind.OWN_TRANSFER else Kind.INCOME
-        op.category == "перевод" -> Kind.TRANSFER_OUT
+        op.category == "вклады" || op.category in conversion || savings.containsMatchIn(op.supplier) -> Kind.OWN_TRANSFER
+        !op.debit -> if (op.supplier == "Перевод на карту" || bankHeadOffice.containsMatchIn(op.supplier)) Kind.OWN_TRANSFER else Kind.INCOME
+        op.category == "перевод" || cardToCard.containsMatchIn(op.supplier) -> Kind.TRANSFER_OUT
         else -> Kind.PURCHASE
     }
 
@@ -147,13 +154,20 @@ object PaymeExport {
         "программы" to "Подписки и сервисы",
         "наличные" to "Наличные",
         "путешествия" to "Путешествия",
+        "туризм" to "Путешествия",
+        "телефон" to "Связь",
+        "телевидение" to "Связь",
+        "косметика" to "Красота",
+        "страхование" to "Услуги",
+        "авто" to "Авто",
+        "гос. пошлины" to Categories.TAXES,
         "для дома" to "Дом",
     )
 
     /** Tiyin's name for Payme's category; null where Payme itself does not know ("прочее"). */
     fun category(paymeCategory: String): String? {
         val c = paymeCategory.trim().lowercase()
-        if (c.isEmpty() || c == "прочее" || c == "перевод" || c == "вклады") return null
+        if (c.isEmpty() || c == "прочее" || c == "перевод" || c == "вклады" || c in conversion) return null
         return categories[c] ?: c.replaceFirstChar { it.uppercase() }
     }
 }

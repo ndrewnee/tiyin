@@ -40,6 +40,7 @@ private enum class Dye(val light: Long, val dark: Long) {
     LEAF(0xFF5F9E2F, 0xFF8CC75E),
     OCHRE(0xFFA87A2A, 0xFFD3A75A),
     PINE(0xFF3F6E6A, 0xFF74ABA4),
+    STONE(0xFF6E6150, 0xFFA8998A),
     SLATE(0xFF7D7F96, 0xFF9C9EB8),
     SAND(0xFFA3A89F, 0xFF8E968E),
 }
@@ -67,6 +68,7 @@ private val categoryDye = mapOf(
     "Авто" to Dye.WALNUT,
     "Животные" to Dye.WALNUT,
     "Услуги" to Dye.PINE,
+    Categories.TAXES to Dye.STONE,
     Categories.VIA_PAYME to Dye.SLATE,
     Categories.OTHER to Dye.SAND,
 )

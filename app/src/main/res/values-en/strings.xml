@@ -66,6 +66,7 @@
     <string name="cat_education">Education</string>
     <string name="cat_car">Car</string>
     <string name="cat_services">Services</string>
+    <string name="cat_taxes">Taxes and government fees</string>
     <string-array name="months">
         <item>January</item>
         <item>February</item>

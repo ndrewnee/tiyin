@@ -190,6 +190,33 @@ class PaymeTest {
     }
 
     @Test
+    fun depositWithdrawalsCardToCardAndConversionsStayOutOfIncomeAndSpending() {
+        val at = LocalDateTime.of(2026, 8, 31, 20, 59, 8)
+        val ledger = Ledger(
+            emptyList(),
+            payme = listOf(
+                op("ASAKABANK AJ BANKINING BOSH OFISI", 1500000000, "прочее", at, debit = false),
+                op("Перевод с карты", 1483125000, "перевод", at.plusMinutes(1)),
+                op("TOSHKENT SH TEST BANK", 2420000000, "прочее", at.plusMinutes(2), debit = false),
+                op("CLICK P2P FREE HUMO2UZCARD", 150000000, "прочее", at.plusMinutes(3)),
+                op("Humo to Visa", 160000000, "прочее", at.plusMinutes(4)),
+                op("UZCARD DRUGOGO BANKA TO VISA", 359100000, "конвертация", at.plusMinutes(5)),
+                op("CLICK MUNIS GOS PLATEJI", 55000000, "гос. пошлины", at.plusMinutes(6)),
+                op("TEST TV", 5000000, "телевидение", at.plusMinutes(7)),
+            ),
+        )
+        val kinds = ledger.transactions.associate { it.merchant to (it.kind to it.category) }
+        assertEquals(Kind.OWN_TRANSFER, kinds["ASAKABANK AJ BANKINING BOSH OFISI"]!!.first)
+        assertEquals(Kind.TRANSFER_OUT, kinds["Перевод с карты"]!!.first)
+        assertEquals(Kind.INCOME, kinds["TOSHKENT SH TEST BANK"]!!.first)
+        assertEquals(Kind.TRANSFER_OUT, kinds["CLICK P2P FREE HUMO2UZCARD"]!!.first)
+        assertEquals(Kind.TRANSFER_OUT, kinds["Humo to Visa"]!!.first)
+        assertEquals(Kind.OWN_TRANSFER, kinds["UZCARD DRUGOGO BANKA TO VISA"]!!.first)
+        assertEquals(Kind.PURCHASE to Categories.TAXES, kinds["CLICK MUNIS GOS PLATEJI"])
+        assertEquals(Kind.PURCHASE to "Связь", kinds["TEST TV"])
+    }
+
+    @Test
     fun pairsByCardAmountAndMinuteSoRepeatedFaresDoNotCollapse() {
         val ledger = Ledger(
             listOf(

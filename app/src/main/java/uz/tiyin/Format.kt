@@ -93,6 +93,7 @@ private val categoryLabels = mapOf(
     "Образование" to R.string.cat_education,
     "Авто" to R.string.cat_car,
     "Услуги" to R.string.cat_services,
+    Categories.TAXES to R.string.cat_taxes,
 )
 
 /** Categories are stored under their Russian names; one only Payme knows is shown as Payme named it. */

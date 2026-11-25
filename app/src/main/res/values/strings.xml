@@ -66,6 +66,7 @@
     <string name="cat_education">Образование</string>
     <string name="cat_car">Авто</string>
     <string name="cat_services">Услуги</string>
+    <string name="cat_taxes">Налоги и госуслуги</string>
     <string-array name="months">
         <item>Январь</item>
         <item>Февраль</item>
