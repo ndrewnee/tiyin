@@ -13,6 +13,8 @@
     <string name="unparsed">Tanilmagan SMS: %d</string>
     <string name="language">Til</string>
     <string name="edit">O\'zgartirish</string>
+    <string name="filter_category">Faqat shu amallarni ko\'rsatish</string>
+    <string name="filter_clear">Barcha amallarni ko\'rsatish</string>
     <string name="mark_what">Bu nima</string>
     <string name="kind_purchase">Xarajat</string>
     <string name="kind_sent">Odamlarga o\'tkazma</string>
