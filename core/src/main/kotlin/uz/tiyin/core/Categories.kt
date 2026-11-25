@@ -6,6 +6,7 @@ object Categories {
     const val TRANSFERS = "Переводы"
     const val INCOME = "Поступления"
     const val OWN = "Между своими счетами"
+    const val TAXES = "Налоги и госуслуги"
 
     private val rules: List<Pair<String, Regex>> = listOf(
         "Такси" to "YANDEXGO TAXI|YANDEX GO|MYTAXI|WB TAXI|TAXI",
@@ -18,6 +19,7 @@ object Categories {
         "Одежда" to "FASHION|ZARA|LC WAIKIKI|DEFACTO|SPORTMASTER",
         "Дом" to "KITCHEN|HOME|MEBEL|TEXTILE",
         "Наличные" to "ATM|BANKOMAT|NALICH",
+        TAXES to "MUNIS|SOLIQ|GOS PLATEJ|DAVLAT BOJ",
         VIA_PAYME to "PAYME",
     ).map { (name, re) -> name to Regex(re, RegexOption.IGNORE_CASE) }
 
