@@ -12,6 +12,16 @@
     <string name="came_in">Пришло</string>
     <string name="unparsed">Не разобрано SMS: %d</string>
     <string name="language">Язык</string>
+    <string name="edit">Изменить</string>
+    <string name="mark_what">Что это</string>
+    <string name="kind_purchase">Трата</string>
+    <string name="kind_sent">Перевод людям</string>
+    <string name="kind_income">Доход</string>
+    <string name="mark_category">Категория</string>
+    <string name="mark_all">Все операции «%1$s»: %2$d</string>
+    <string name="mark_save">Сохранить</string>
+    <string name="mark_reset">Вернуть как было</string>
+    <string name="mark_manual">вручную</string>
     <string name="import_payme">Загрузить выгрузку из Payme</string>
     <string name="payme_hidden">%1$s %2$s ушло через Payme без названия магазина.</string>
     <string name="no_sms_month">За этот месяц SMS нет. Операции можно взять из выгрузки Payme.</string>

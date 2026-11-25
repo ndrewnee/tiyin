@@ -48,6 +48,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -72,9 +73,11 @@ import java.io.IOException
 import java.time.LocalDate
 import java.time.YearMonth
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import uz.tiyin.core.Ledger
 import uz.tiyin.core.PaymeExport
+import uz.tiyin.core.Txn
 
 class MainActivity : ComponentActivity() {
     /** A file shared or opened with the app; cleared once imported so recreation does not import it again. */
@@ -192,13 +195,16 @@ private fun App(incoming: Uri?, onImported: () -> Unit) {
     when {
         !hasPermission -> Onboarding { launcher.launch(smsPermissions) }
         ledger == null -> Box(Modifier.fillMaxSize())
-        else -> Ledgers(ledger!!) { picker.launch(arrayOf(XLSX, "application/octet-stream")) }
+        else -> Ledgers(ledger!!, onImport = { picker.launch(arrayOf(XLSX, "application/octet-stream")) }, onChanged = { reload++ })
     }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Ledgers(ledger: Ledger, onImport: () -> Unit) {
+private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var editing by remember { mutableStateOf<Txn?>(null) }
     val today = LocalDate.now()
     val current = Period.Month(YearMonth.from(today))
     var period by remember { mutableStateOf<Period>(current) }
@@ -207,7 +213,10 @@ private fun Ledgers(ledger: Ledger, onImport: () -> Unit) {
 
     Box(Modifier.fillMaxSize().safeDrawingPadding()) {
         when (val shown = period) {
-            is Period.Month -> MonthScreen(ledger, shown.ym, today, onPick = { picking = true }, onMonth = { period = Period.Month(it) }, onImport = onImport)
+            is Period.Month -> MonthScreen(
+                ledger, shown.ym, today, onPick = { picking = true }, onMonth = { period = Period.Month(it) }, onImport = onImport,
+                onTxn = { editing = it },
+            )
             is Period.Year -> YearScreen(
                 ledger, shown.year, today, onPick = { picking = true },
                 onYear = { period = Period.Year(it) }, onMonth = { period = Period.Month(it) },
@@ -222,6 +231,22 @@ private fun Ledgers(ledger: Ledger, onImport: () -> Unit) {
             containerColor = p.bg, scrimColor = p.sheetScrim, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         ) {
             PeriodPicker(ledger, today, period, onImport = { picking = false; onImport() }) { picked -> period = picked; picking = false }
+        }
+    }
+    editing?.let { txn ->
+        val p = LocalPalette.current
+        ModalBottomSheet(
+            onDismissRequest = { editing = null },
+            sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+            containerColor = p.bg, scrimColor = p.sheetScrim, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
+        ) {
+            MarkSheet(ledger, txn, today) { change ->
+                scope.launch {
+                    withContext(Dispatchers.IO) { SmsStore.get(context).saveMark(change.target, change.mark, change.cleared, System.currentTimeMillis()) }
+                    editing = null
+                    onChanged()
+                }
+            }
         }
     }
 }

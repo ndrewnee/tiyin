@@ -164,7 +164,7 @@ private fun otherCurrencies(totals: Map<String, List<Ledger.CategoryTotal>>, and
 @Composable
 fun MonthScreen(
     ledger: Ledger, ym: YearMonth, today: LocalDate,
-    onPick: () -> Unit, onMonth: (YearMonth) -> Unit, onImport: () -> Unit,
+    onPick: () -> Unit, onMonth: (YearMonth) -> Unit, onImport: () -> Unit, onTxn: (Txn) -> Unit,
 ) {
     val p = LocalPalette.current
     val res = resources()
@@ -219,7 +219,7 @@ fun MonthScreen(
                     fontFamily = Golos, fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = p.ink,
                 )
             }
-            items(list, key = { "t-${it.key}" }) { TxnRow(it) }
+            items(list, key = { "t-${it.key}" }) { TxnRow(it) { onTxn(it) } }
         }
         if (ledger.unparsed.isNotEmpty()) {
             item {
@@ -247,7 +247,7 @@ private fun Figure(label: String, value: String, color: Color, modifier: Modifie
 }
 
 @Composable
-private fun TxnRow(t: Txn) {
+private fun TxnRow(t: Txn, onClick: () -> Unit) {
     val p = LocalPalette.current
     val thread = when (t.kind) {
         Kind.PURCHASE -> p.dye(t.category)
@@ -261,10 +261,13 @@ private fun TxnRow(t: Txn) {
         Kind.TRANSFER_OUT -> res.getString(R.string.sent_meta, t.bank)
         Kind.INCOME -> res.getString(R.string.came_meta, t.bank)
         Kind.OWN_TRANSFER -> res.getString(R.string.cat_own)
-    }
+    } + if (t.markedBy != null) ", " + res.getString(R.string.mark_manual) else ""
     val own = t.kind == Kind.OWN_TRANSFER
     val value = (if (t.kind == Kind.INCOME) "+" else "") + amount(t.amount)
-    Row(Modifier.fillMaxWidth().heightIn(min = 58.dp).padding(vertical = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 58.dp).clickable(onClickLabel = stringResource(R.string.edit), onClick = onClick).padding(vertical = 2.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
         Box(Modifier.width(4.dp).height(42.dp).clip(RoundedCornerShape(2.dp)).background(thread))
         Text(
             "%02d:%02d".format(t.at.hour, t.at.minute), Modifier.padding(start = 12.dp).width(46.dp),

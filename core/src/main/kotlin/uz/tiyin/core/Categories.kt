@@ -8,6 +8,13 @@ object Categories {
     const val OWN = "Между своими счетами"
     const val TAXES = "Налоги и госуслуги"
 
+    /** Every spending category the user can pick, in the order the picker shows them. */
+    val spending = listOf(
+        "Продукты и доставка", "Кафе и рестораны", "Такси", "Транспорт", "Авто", "Маркетплейсы", "Покупки", "Одежда",
+        "Техника", "Дом", "Жильё", "Коммунальные", "Связь", "Подписки и сервисы", "Здоровье", "Красота", "Животные",
+        "Спорт и развлечения", "Путешествия", "Образование", "Услуги", TAXES, "Наличные", OTHER,
+    )
+
     private val rules: List<Pair<String, Regex>> = listOf(
         "Такси" to "YANDEXGO TAXI|YANDEX GO|MYTAXI|WB TAXI|TAXI",
         "Продукты и доставка" to "LAVKA|YANDEX ?EATS|YANDEX EDA|EXPRESS24|KORZINKA|MAKRO|HAVAS|CARREFOUR|BAZAAR|FOOD|QANDOLAT|WHITE DRINK",
