@@ -13,6 +13,8 @@
     <string name="unparsed">Не разобрано SMS: %d</string>
     <string name="language">Язык</string>
     <string name="edit">Изменить</string>
+    <string name="filter_category">Показать только эти операции</string>
+    <string name="filter_clear">Показать все операции</string>
     <string name="mark_what">Что это</string>
     <string name="kind_purchase">Трата</string>
     <string name="kind_sent">Перевод людям</string>

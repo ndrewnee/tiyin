@@ -138,21 +138,24 @@ private fun PaymePrompt(text: String, onImport: () -> Unit) {
     }
 }
 
-/** [onImport] makes the "paid through Payme" row open the export picker, since only an export can name those shops. */
-private fun LazyListScope.categoryRows(rows: List<Ledger.CategoryTotal>, onImport: (() -> Unit)? = null) {
+private fun LazyListScope.categoryRows(rows: List<Ledger.CategoryTotal>, selected: String? = null, onTap: ((String) -> Unit)? = null) {
     items(rows, key = { "cat-${it.category}-${it.total.currency}" }) { c ->
         val p = LocalPalette.current
-        val importable = onImport != null && c.category == Categories.VIA_PAYME
-        val tap = if (importable) Modifier.clickable(onClickLabel = stringResource(R.string.import_payme), role = Role.Button, onClick = onImport!!) else Modifier
+        val on = c.category == selected
+        val tap = if (onTap == null) Modifier else Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) p.track else Color.Transparent)
+            .clickable(onClickLabel = stringResource(if (on) R.string.filter_clear else R.string.filter_category), role = Role.Button) { onTap(c.category) }
         Row(Modifier.fillMaxWidth().heightIn(min = 42.dp).then(tap), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(14.dp, 22.dp).background(p.dye(c.category)))
             Text(
                 resources().categoryLabel(c.category), Modifier.weight(1f).padding(start = 12.dp, end = 6.dp),
                 fontFamily = Golos, fontSize = 16.sp, color = p.ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                textDecoration = if (importable) TextDecoration.Underline else null,
+                fontWeight = if (on) FontWeight.SemiBold else null,
             )
             Text("${c.count}", Modifier.padding(end = 12.dp), fontFamily = Golos, fontSize = 14.sp, color = p.muted)
-            Text(amount(c.total), style = numeric, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = p.ink)
+            Text(
+                amount(c.total), Modifier.padding(end = if (onTap != null) 6.dp else 0.dp),
+                style = numeric, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = p.ink,
+            )
         }
     }
 }
@@ -180,6 +183,12 @@ fun MonthScreen(
     val others = otherCurrencies(spend, res.getString(R.string.and))
     val isCurrent = ym == YearMonth.from(today)
     var showUnparsed by remember { mutableStateOf(false) }
+    var picked by remember(ym) { mutableStateOf<String?>(null) }
+    // A category that disappeared after a change (a mark, an import) drops the filter instead of leaving an empty list.
+    val only = picked?.takeIf { c -> spend.values.flatten().any { it.category == c } }
+    val days = if (only == null) d.days else {
+        d.days.mapValues { (_, list) -> list.filter { it.kind == Kind.PURCHASE && it.category == only } }.filterValues { it.isNotEmpty() }
+    }
 
     LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
         item {
@@ -211,8 +220,15 @@ fun MonthScreen(
             if (d.days.isEmpty()) PaymePrompt(res.getString(R.string.no_sms_month), onImport)
             Spacer(Modifier.height(24.dp))
         }
-        categoryRows(spend.values.flatten(), onImport)
-        d.days.forEach { (day, list) ->
+        categoryRows(spend.values.flatten(), only) { picked = if (it == only) null else it }
+        if (only == Categories.VIA_PAYME) item(key = "payme-import") {
+            Text(
+                stringResource(R.string.import_payme),
+                Modifier.padding(top = 20.dp).clip(RoundedCornerShape(4.dp)).clickable(role = Role.Button, onClick = onImport).padding(vertical = 8.dp),
+                fontFamily = Golos, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = p.ink, textDecoration = TextDecoration.Underline,
+            )
+        }
+        days.forEach { (day, list) ->
             item(key = "day-$day") {
                 Text(
                     res.dayTitle(day, today), Modifier.padding(top = 32.dp, bottom = 6.dp).semantics { heading() },

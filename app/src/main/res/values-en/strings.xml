@@ -13,6 +13,8 @@
     <string name="unparsed">Unrecognized SMS: %d</string>
     <string name="language">Language</string>
     <string name="edit">Change</string>
+    <string name="filter_category">Show only these operations</string>
+    <string name="filter_clear">Show all operations</string>
     <string name="mark_what">What is this</string>
     <string name="kind_purchase">Spending</string>
     <string name="kind_sent">Sent to people</string>
