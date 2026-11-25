@@ -138,14 +138,18 @@ private fun PaymePrompt(text: String, onImport: () -> Unit) {
     }
 }
 
-private fun LazyListScope.categoryRows(rows: List<Ledger.CategoryTotal>) {
+/** [onImport] makes the "paid through Payme" row open the export picker, since only an export can name those shops. */
+private fun LazyListScope.categoryRows(rows: List<Ledger.CategoryTotal>, onImport: (() -> Unit)? = null) {
     items(rows, key = { "cat-${it.category}-${it.total.currency}" }) { c ->
         val p = LocalPalette.current
-        Row(Modifier.fillMaxWidth().heightIn(min = 42.dp), verticalAlignment = Alignment.CenterVertically) {
+        val importable = onImport != null && c.category == Categories.VIA_PAYME
+        val tap = if (importable) Modifier.clickable(onClickLabel = stringResource(R.string.import_payme), role = Role.Button, onClick = onImport!!) else Modifier
+        Row(Modifier.fillMaxWidth().heightIn(min = 42.dp).then(tap), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(14.dp, 22.dp).background(p.dye(c.category)))
             Text(
                 resources().categoryLabel(c.category), Modifier.weight(1f).padding(start = 12.dp, end = 6.dp),
                 fontFamily = Golos, fontSize = 16.sp, color = p.ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                textDecoration = if (importable) TextDecoration.Underline else null,
             )
             Text("${c.count}", Modifier.padding(end = 12.dp), fontFamily = Golos, fontSize = 14.sp, color = p.muted)
             Text(amount(c.total), style = numeric, fontSize = 18.sp, fontWeight = FontWeight.Medium, color = p.ink)
@@ -204,14 +208,10 @@ fun MonthScreen(
                 val inc = sumOf(came, "UZS")
                 Figure(stringResource(R.string.came_in), if (inc > 0) "+" + groupDigits(inc / 100) else "0", if (inc > 0) p.income else p.ink, Modifier.weight(1f))
             }
-            val viaPayme = uzs.firstOrNull { it.category == Categories.VIA_PAYME }?.total?.minor ?: 0L
-            when {
-                viaPayme > 0 -> PaymePrompt(res.getString(R.string.payme_hidden, groupDigits(viaPayme / 100), res.getString(R.string.som)), onImport)
-                d.days.isEmpty() -> PaymePrompt(res.getString(R.string.no_sms_month), onImport)
-            }
+            if (d.days.isEmpty()) PaymePrompt(res.getString(R.string.no_sms_month), onImport)
             Spacer(Modifier.height(24.dp))
         }
-        categoryRows(spend.values.flatten())
+        categoryRows(spend.values.flatten(), onImport)
         d.days.forEach { (day, list) ->
             item(key = "day-$day") {
                 Text(

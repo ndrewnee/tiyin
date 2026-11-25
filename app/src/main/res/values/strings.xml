@@ -23,7 +23,6 @@
     <string name="mark_reset">Вернуть как было</string>
     <string name="mark_manual">вручную</string>
     <string name="import_payme">Загрузить выгрузку из Payme</string>
-    <string name="payme_hidden">%1$s %2$s ушло через Payme без названия магазина.</string>
     <string name="no_sms_month">За этот месяц SMS нет. Операции можно взять из выгрузки Payme.</string>
     <string name="sent_meta">Отправлено, %s</string>
     <string name="came_meta">Пришло, %s</string>
