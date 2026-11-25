@@ -87,7 +87,7 @@ class Ledger(
          * identical sender and text is always the same message.
          */
         fun dedupe(raw: List<Sms>): List<Sms> =
-            raw.sortedBy { it.receivedAt }.distinctBy { it.sender.uppercase() to it.body.replace(Regex("\\s+"), " ").trim() }
+            raw.sortedBy { it.receivedAt }.distinctBy { (Parsers.bank(it.sender) ?: it.sender.uppercase()) to it.body.replace(Regex("\\s+"), " ").trim() }
 
         /** Totals per currency and category; own transfers are never counted. */
         fun totals(txns: List<Txn>, kinds: Set<Kind>): Map<String, List<CategoryTotal>> =

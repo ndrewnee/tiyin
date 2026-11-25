@@ -6,9 +6,16 @@ import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 
 object Parsers {
-    val bankSenders: Set<String> = setOf("HUMO", "UZCARD", "ASAKABANK", "KAPITALBANK", "PAYME")
+    private val bankSenders = mapOf(
+        "HUMO" to "HUMO", "UZCARD" to "UZCARD", "ASAKABANK" to "ASAKABANK", "KAPITALBANK" to "KAPITALBANK", "PAYME" to "PAYME",
+        // Kapitalbank's short number; some of its texts still come from it instead of the named sender.
+        "2212" to "KAPITALBANK",
+    )
 
-    fun isBankSender(sender: String): Boolean = sender.trim().uppercase() in bankSenders
+    /** The bank behind a sender name, or null for anyone else. */
+    fun bank(sender: String): String? = bankSenders[sender.trim().uppercase()]
+
+    fun isBankSender(sender: String): Boolean = bank(sender) != null
 
     private val otp = Regex(
         "(kod|код|code|parol|пароль|otp|tasdiq|подтвержд|не сообщайте|hech kimga)",
@@ -18,7 +25,7 @@ object Parsers {
     fun parse(sms: Sms): ParseResult {
         if (!isBankSender(sms.sender)) return ParseResult.Ignored("not a bank sender")
         val body = sms.body.replace(Regex("\\s+"), " ").trim()
-        val parsed = when (sms.sender.trim().uppercase()) {
+        val parsed = when (bank(sms.sender)) {
             "HUMO" -> humo(sms, body)
             "UZCARD" -> uzcard(sms, body)
             "KAPITALBANK" -> kapitalbank(sms, body)

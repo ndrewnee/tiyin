@@ -77,6 +77,18 @@ class ParsersTest {
     }
 
     @Test
+    fun kapitalbankShortNumber() {
+        val body = "Snyatiye, 15.11.26 v 14:32. Karta (*3333). Summa: 100.00 USD. VISA MC USD 2 HUMO KB>Tashkent UZ. Dostupno: 534.73 USD"
+        val out = parsed("2212", body)
+        assertEquals("KAPITALBANK", out.bank)
+        assertEquals(Kind.OWN_TRANSFER, out.kind)
+
+        val at = LocalDateTime.of(2026, 11, 15, 14, 33)
+        val both = Ledger(listOf(Sms("2212", body, at), Sms("kapitalbank", body, at.plusMinutes(1))))
+        assertEquals(1, both.transactions.size)
+    }
+
+    @Test
     fun kapitalbankDeposits() {
         val out = parsed("kapitalbank", "S vklada 'Test vklad' spisano 500.00 USD. Ostatok - 1000.00 USD. 18.11.2026.")
         assertEquals(Kind.OWN_TRANSFER, out.kind)
