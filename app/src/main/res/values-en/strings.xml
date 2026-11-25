@@ -12,12 +12,6 @@
     <string name="came_in">Received</string>
     <string name="unparsed">Unrecognized SMS: %d</string>
     <string name="language">Language</string>
-    <string name="backup_save">Save a backup</string>
-    <string name="backup_load">Restore a backup</string>
-    <string name="backup_saved">Backup saved. SMS: %1$d, Payme: %2$d, marks: %3$d</string>
-    <string name="backup_loaded">Added from the backup. SMS: %1$d, Payme: %2$d, marks: %3$d</string>
-    <string name="backup_bad">This is not a Tiyin backup</string>
-    <string name="backup_failed">Could not save the backup</string>
     <string name="edit">Change</string>
     <string name="mark_what">What is this</string>
     <string name="kind_purchase">Spending</string>
