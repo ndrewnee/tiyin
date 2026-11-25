@@ -213,17 +213,23 @@ private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit)
     val current = Period.Month(YearMonth.from(today))
     var period by remember { mutableStateOf<Period>(current) }
     var picking by remember { mutableStateOf(false) }
+    var category by remember { mutableStateOf<String?>(null) }
+    var searching by remember { mutableStateOf(false) }
     BackHandler(enabled = period != current) { period = current }
+    BackHandler(enabled = searching) { searching = false }
 
     Box(Modifier.fillMaxSize().safeDrawingPadding()) {
-        when (val shown = period) {
+        if (searching) {
+            SearchScreen(ledger, today, onClose = { searching = false }, onTxn = { editing = it })
+        } else when (val shown = period) {
             is Period.Month -> MonthScreen(
-                ledger, shown.ym, today, onPick = { picking = true }, onMonth = { period = Period.Month(it) }, onImport = onImport,
-                onTxn = { editing = it },
+                ledger, shown.ym, today, category, onCategory = { category = it },
+                onPick = { picking = true }, onMonth = { period = Period.Month(it) }, onImport = onImport,
+                onTxn = { editing = it }, onSearch = { searching = true },
             )
             is Period.Year -> YearScreen(
-                ledger, shown.year, today, onPick = { picking = true },
-                onYear = { period = Period.Year(it) }, onMonth = { period = Period.Month(it) },
+                ledger, shown.year, today, category, onCategory = { category = it }, onPick = { picking = true },
+                onYear = { period = Period.Year(it) }, onMonth = { period = Period.Month(it) }, onSearch = { searching = true },
             )
         }
     }

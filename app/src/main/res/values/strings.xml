@@ -15,6 +15,14 @@
     <string name="edit">Изменить</string>
     <string name="filter_category">Показать только эти операции</string>
     <string name="filter_clear">Показать все операции</string>
+    <string name="filter_absent">«%1$s» в этом месяце нет.</string>
+    <string name="search">Поиск</string>
+    <string name="search_hint">Магазин или имя</string>
+    <string name="search_nothing">Ничего не найдено</string>
+    <string name="search_count">Операций: %d</string>
+    <string name="search_out">Ушло %s сум</string>
+    <string name="search_came">Пришло +%s сум</string>
+    <string name="close">Закрыть</string>
     <string name="mark_what">Что это</string>
     <string name="kind_purchase">Трата</string>
     <string name="kind_sent">Перевод людям</string>
