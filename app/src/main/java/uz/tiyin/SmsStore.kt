@@ -131,6 +131,10 @@ class SmsStore private constructor(context: Context) :
     @Volatile var revision = 0L
         private set
 
+    fun changed() {
+        revision++
+    }
+
     /** Returns how many rows were new. */
     fun savePayme(ops: List<PaymeOp>, nowMs: Long): Int {
         var added = 0
