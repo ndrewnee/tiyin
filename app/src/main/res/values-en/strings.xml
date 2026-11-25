@@ -12,6 +12,16 @@
     <string name="came_in">Received</string>
     <string name="unparsed">Unrecognized SMS: %d</string>
     <string name="language">Language</string>
+    <string name="edit">Change</string>
+    <string name="mark_what">What is this</string>
+    <string name="kind_purchase">Spending</string>
+    <string name="kind_sent">Sent to people</string>
+    <string name="kind_income">Income</string>
+    <string name="mark_category">Category</string>
+    <string name="mark_all">All operations named “%1$s”: %2$d</string>
+    <string name="mark_save">Save</string>
+    <string name="mark_reset">Undo my change</string>
+    <string name="mark_manual">set by you</string>
     <string name="import_payme">Import a Payme export</string>
     <string name="payme_hidden">%1$s %2$s went through Payme without a shop name.</string>
     <string name="no_sms_month">There are no SMS for this month. Its operations can come from a Payme export.</string>

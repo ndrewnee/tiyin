@@ -12,6 +12,16 @@
     <string name="came_in">Kirim</string>
     <string name="unparsed">Tanilmagan SMS: %d</string>
     <string name="language">Til</string>
+    <string name="edit">O\'zgartirish</string>
+    <string name="mark_what">Bu nima</string>
+    <string name="kind_purchase">Xarajat</string>
+    <string name="kind_sent">Odamlarga o\'tkazma</string>
+    <string name="kind_income">Daromad</string>
+    <string name="mark_category">Kategoriya</string>
+    <string name="mark_all">«%1$s» nomli barcha amallar: %2$d</string>
+    <string name="mark_save">Saqlash</string>
+    <string name="mark_reset">Avvalgi holatga qaytarish</string>
+    <string name="mark_manual">qo\'lda</string>
     <string name="import_payme">Payme ko\'chirmasini yuklash</string>
     <string name="payme_hidden">%1$s %2$s Payme orqali do\'kon nomisiz to\'langan.</string>
     <string name="no_sms_month">Bu oy uchun SMS yo\'q. Operatsiyalarni Payme ko\'chirmasidan olish mumkin.</string>

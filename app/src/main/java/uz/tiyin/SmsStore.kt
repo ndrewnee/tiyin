@@ -5,7 +5,10 @@ import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 import android.provider.Telephony
+import uz.tiyin.core.Kind
 import uz.tiyin.core.Ledger
+import uz.tiyin.core.Mark
+import uz.tiyin.core.Marks
 import uz.tiyin.core.Money
 import uz.tiyin.core.Parsers
 import uz.tiyin.core.PaymeOp
@@ -21,7 +24,7 @@ data class IncomingSms(val sender: String, val body: String, val epochMs: Long)
  * so the user can wipe SMS on the phone without losing history.
  */
 class SmsStore private constructor(context: Context) :
-    SQLiteOpenHelper(context.applicationContext, "tiyin.db", null, 3) {
+    SQLiteOpenHelper(context.applicationContext, "tiyin.db", null, 4) {
 
     override fun onCreate(db: SQLiteDatabase) {
         db.execSQL(
@@ -38,11 +41,60 @@ class SmsStore private constructor(context: Context) :
         )
         createMerchantTable(db)
         createPaymeTable(db)
+        createMarkTable(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
         if (oldVersion < 2) createMerchantTable(db)
         if (oldVersion < 3) createPaymeTable(db)
+        if (oldVersion < 4) createMarkTable(db)
+    }
+
+    /** target is an operation id or a merchant target from [Marks]; category holds the Russian name. */
+    private fun createMarkTable(db: SQLiteDatabase) {
+        db.execSQL(
+            """
+            CREATE TABLE mark (
+                target TEXT PRIMARY KEY,
+                kind TEXT NOT NULL,
+                category TEXT,
+                updated_at INTEGER NOT NULL
+            )
+            """.trimIndent(),
+        )
+    }
+
+    fun marks(): Marks = readableDatabase.rawQuery("SELECT target, kind, category FROM mark", null).use { c ->
+        Marks(
+            buildMap {
+                while (c.moveToNext()) {
+                    val kind = runCatching { Kind.valueOf(c.getString(1)) }.getOrNull() ?: continue
+                    put(c.getString(0), Mark(kind, c.getString(2)))
+                }
+            },
+        )
+    }
+
+    /** Sets [mark] on [target] and clears [cleared] in one go; a null mark only clears. */
+    fun saveMark(target: String, mark: Mark?, cleared: Collection<String>, nowMs: Long) {
+        val db = writableDatabase
+        db.beginTransaction()
+        try {
+            for (t in cleared + target) db.delete("mark", "target = ?", arrayOf(t))
+            if (mark != null) db.insert(
+                "mark", null,
+                ContentValues().apply {
+                    put("target", target)
+                    put("kind", mark.kind.name)
+                    put("category", mark.category)
+                    put("updated_at", nowMs)
+                },
+            )
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        revision++
     }
 
     /**
@@ -130,7 +182,7 @@ class SmsStore private constructor(context: Context) :
         }
     }
 
-    fun ledger(): Ledger = Ledger(all(), lookedUpCategories(), paymeOps())
+    fun ledger(): Ledger = Ledger(all(), lookedUpCategories(), paymeOps(), marks())
 
     /** One row per merchant looked up in the company register; category is NULL when nothing matched. */
     private fun createMerchantTable(db: SQLiteDatabase) {

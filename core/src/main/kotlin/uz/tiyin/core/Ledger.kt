@@ -13,14 +13,15 @@ class Ledger(
     raw: List<Sms>,
     lookedUpCategories: Map<String, String> = emptyMap(),
     payme: List<PaymeOp> = emptyList(),
+    marks: Marks = Marks(),
 ) {
     val transactions: List<Txn>
     val unparsed: List<Sms>
     val ignored: Int
 
-    /** Merchants of purchases that neither the dictionary nor an earlier lookup could place. */
+    /** Merchants of purchases that neither the dictionary, an earlier lookup nor the user could place. */
     val unknownMerchants: Set<String>
-        get() = transactions.filter { it.kind == Kind.PURCHASE && it.category == Categories.OTHER }.map { it.merchant }.toSet()
+        get() = transactions.filter { it.kind == Kind.PURCHASE && it.category == Categories.OTHER && it.markedBy == null }.map { it.merchant }.toSet()
 
     init {
         val txns = mutableListOf<Txn>()
@@ -34,7 +35,12 @@ class Ledger(
             }
         }
         transactions = withPayme(txns, payme)
-            .map { it.copy(category = Categories.categorize(it, lookedUpCategories)) }
+            .map { t ->
+                val (mark, scope) = marks.find(t)?.takeIf { it.first.fits(t.outgoing) }
+                    ?: return@map t.copy(category = Categories.categorize(t, lookedUpCategories))
+                val marked = t.copy(kind = mark.kind, markedBy = scope)
+                marked.copy(category = mark.category.takeIf { mark.kind == Kind.PURCHASE } ?: Categories.categorize(marked, lookedUpCategories))
+            }
             .sortedByDescending { it.at }
         unparsed = failed.sortedByDescending { it.receivedAt }
         ignored = skipped
@@ -64,7 +70,7 @@ class Ledger(
                 val op = candidates.filter { gap(it) <= MATCH_WINDOW_SECONDS }.minByOrNull(::gap) ?: return@map t
                 candidates.remove(op)
                 val named = paymePlaceholder.containsMatchIn(t.merchant) && op.supplier.isNotEmpty()
-                t.copy(payme = op, merchant = if (named) op.supplier else t.merchant)
+                t.copy(payme = op, merchant = if (named) op.supplier else t.merchant, outgoing = op.debit)
             }
             val alone = pool.values.flatten().map { op ->
                 Txn(
