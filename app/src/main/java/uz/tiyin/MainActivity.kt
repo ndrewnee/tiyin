@@ -67,6 +67,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.IntentCompat
 import androidx.lifecycle.Lifecycle
@@ -151,12 +152,19 @@ private fun App(incoming: Uri?, onImported: () -> Unit) {
     val context = LocalContext.current
     fun granted() = smsPermissions.all { ContextCompat.checkSelfPermission(context, it) == PackageManager.PERMISSION_GRANTED }
 
+    val prefs = remember { context.getSharedPreferences(APP_PREFS, Context.MODE_PRIVATE) }
     var hasPermission by remember { mutableStateOf(granted()) }
+    var withoutSms by remember { mutableStateOf(prefs.getBoolean(WITHOUT_SMS, false)) }
     var ledger by remember { mutableStateOf<Ledger?>(null) }
     var builtRevision by remember { mutableStateOf(-1L) }
     var reload by remember { mutableIntStateOf(0) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) {
         hasPermission = granted()
+        // After a second refusal Android stops showing the dialog, so the only way left is the system settings.
+        val activity = context as? Activity
+        if (!hasPermission && activity != null && !ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.READ_SMS)) {
+            Toast.makeText(context, R.string.sms_settings_hint, Toast.LENGTH_LONG).show()
+        }
     }
     var picked by remember { mutableStateOf<Uri?>(null) }
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { picked = it }
@@ -173,17 +181,22 @@ private fun App(incoming: Uri?, onImported: () -> Unit) {
 
     val lifecycle = LocalLifecycleOwner.current.lifecycle
     DisposableEffect(lifecycle) {
-        val observer = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) reload++ }
+        val observer = LifecycleEventObserver { _, e ->
+            if (e == Lifecycle.Event.ON_RESUME) {
+                hasPermission = granted()
+                reload++
+            }
+        }
         lifecycle.addObserver(observer)
         onDispose { lifecycle.removeObserver(observer) }
     }
 
-    LaunchedEffect(hasPermission, reload) {
-        if (!hasPermission) return@LaunchedEffect
+    LaunchedEffect(hasPermission, withoutSms, reload) {
+        if (!hasPermission && !withoutSms) return@LaunchedEffect
         val store = SmsStore.get(context)
         val known = ledger
         val fresh = withContext(Dispatchers.IO) {
-            store.importInbox(context)
+            if (hasPermission) store.importInbox(context)
             val revision = store.revision
             if (known != null && revision == builtRevision) null else revision to store.ledger()
         }
@@ -199,15 +212,29 @@ private fun App(incoming: Uri?, onImported: () -> Unit) {
     }
 
     when {
-        !hasPermission -> Onboarding { launcher.launch(smsPermissions) }
+        !hasPermission && !withoutSms -> Onboarding(
+            onAllow = { launcher.launch(smsPermissions) },
+            onSkip = {
+                prefs.edit().putBoolean(WITHOUT_SMS, true).apply()
+                withoutSms = true
+            },
+        )
         ledger == null -> Box(Modifier.fillMaxSize())
-        else -> Ledgers(ledger!!, onImport = { picker.launch(arrayOf(XLSX, "application/octet-stream")) }, onChanged = { reload++ })
+        else -> Ledgers(
+            ledger!!,
+            onImport = { picker.launch(arrayOf(XLSX, "application/octet-stream")) },
+            onAllowSms = if (hasPermission) null else ({ launcher.launch(smsPermissions) }),
+            onChanged = { reload++ },
+        )
     }
 }
 
+private const val APP_PREFS = "app"
+private const val WITHOUT_SMS = "without_sms"
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit) {
+private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onAllowSms: (() -> Unit)?, onChanged: () -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var editing by remember { mutableStateOf<Txn?>(null) }
@@ -242,7 +269,11 @@ private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit)
             sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
             containerColor = p.bg, scrimColor = p.sheetScrim, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
         ) {
-            PeriodPicker(ledger, today, period, onImport = { picking = false; onImport() }) { picked -> period = picked; picking = false }
+            PeriodPicker(
+                ledger, today, period,
+                onImport = { picking = false; onImport() },
+                onAllowSms = onAllowSms?.let { allow -> { picking = false; allow() } },
+            ) { picked -> period = picked; picking = false }
         }
     }
     editing?.let { txn ->
@@ -264,7 +295,20 @@ private fun Ledgers(ledger: Ledger, onImport: () -> Unit, onChanged: () -> Unit)
 }
 
 @Composable
-private fun PeriodPicker(ledger: Ledger, today: LocalDate, selected: Period, onImport: () -> Unit, onPick: (Period) -> Unit) {
+private fun PickerAction(label: String, onClick: () -> Unit) {
+    val p = LocalPalette.current
+    Text(
+        label,
+        Modifier.fillMaxWidth().padding(bottom = 16.dp).clip(RoundedCornerShape(4.dp)).background(p.track)
+            .clickable(role = Role.Button, onClick = onClick).padding(horizontal = 14.dp, vertical = 14.dp),
+        fontFamily = Golos, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = p.ink,
+    )
+}
+
+@Composable
+private fun PeriodPicker(
+    ledger: Ledger, today: LocalDate, selected: Period, onImport: () -> Unit, onAllowSms: (() -> Unit)?, onPick: (Period) -> Unit,
+) {
     val p = LocalPalette.current
     val res = resources()
     val firstYear = ledger.transactions.minOfOrNull { it.at.year } ?: today.year
@@ -276,17 +320,11 @@ private fun PeriodPicker(ledger: Ledger, today: LocalDate, selected: Period, onI
     LaunchedEffect(Unit) {
         val layout = list.layoutInfo
         val item = layout.visibleItemsInfo.find { it.key == shownYear }
-        if (item == null || item.offset + item.size > layout.viewportEndOffset) list.scrollToItem(HEADER_ITEMS + years.indexOf(shownYear))
+        if (item == null || item.offset + item.size > layout.viewportEndOffset) list.scrollToItem(HEADER_ITEMS + (if (onAllowSms != null) 1 else 0) + years.indexOf(shownYear))
     }
     LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 20.dp).navigationBarsPadding(), state = list) {
-        item(key = "import") {
-            Text(
-                stringResource(R.string.import_payme),
-                Modifier.fillMaxWidth().padding(bottom = 16.dp).clip(RoundedCornerShape(4.dp)).background(p.track)
-                    .clickable(role = Role.Button, onClick = onImport).padding(horizontal = 14.dp, vertical = 14.dp),
-                fontFamily = Golos, fontSize = 15.sp, fontWeight = FontWeight.Medium, color = p.ink,
-            )
-        }
+        if (onAllowSms != null) item(key = "allow-sms") { PickerAction(stringResource(R.string.allow_sms), onAllowSms) }
+        item(key = "import") { PickerAction(stringResource(R.string.import_payme), onImport) }
         item(key = "language") { LanguageRow() }
         items(years, key = { it }) { year ->
             val months = remember(ledger, year, p) { monthSummaries(ledger, year, p).filter { !it.ym.isAfter(thisMonth) }.reversed() }
@@ -372,7 +410,7 @@ private fun MonthCell(m: MonthSummary, isSelected: Boolean, enabled: Boolean, mo
 }
 
 @Composable
-private fun Onboarding(onAllow: () -> Unit) {
+private fun Onboarding(onAllow: () -> Unit, onSkip: () -> Unit) {
     val p = LocalPalette.current
     val dyes = listOf("Продукты и доставка", "Кафе и рестораны", "", "Покупки", "Здоровье", "Продукты и доставка", "Такси")
     val weights = listOf(3f, 2f, 1f, 2.4f, 1.6f, 1f, 2f)
@@ -395,13 +433,21 @@ private fun Onboarding(onAllow: () -> Unit) {
                 )
             }
         }
-        Box(
-            Modifier.navigationBarsPadding().padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 24.dp)
-                .fillMaxWidth().height(56.dp).clip(RoundedCornerShape(4.dp)).background(p.ink)
-                .clickable(role = Role.Button, onClick = onAllow),
-            contentAlignment = Alignment.Center,
-        ) {
-            Text(stringResource(R.string.allow_sms), fontFamily = Golos, fontSize = 17.sp, fontWeight = FontWeight.Medium, color = p.bg)
+        Column(Modifier.navigationBarsPadding().padding(start = 24.dp, end = 24.dp, top = 16.dp, bottom = 12.dp)) {
+            Box(
+                Modifier.fillMaxWidth().height(56.dp).clip(RoundedCornerShape(4.dp)).background(p.ink)
+                    .clickable(role = Role.Button, onClick = onAllow),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(stringResource(R.string.allow_sms), fontFamily = Golos, fontSize = 17.sp, fontWeight = FontWeight.Medium, color = p.bg)
+            }
+            Box(
+                Modifier.fillMaxWidth().padding(top = 4.dp).heightIn(min = 48.dp).clip(RoundedCornerShape(4.dp))
+                    .clickable(role = Role.Button, onClick = onSkip),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(stringResource(R.string.continue_without_sms), fontFamily = Golos, fontSize = 16.sp, color = p.muted)
+            }
         }
     }
 }

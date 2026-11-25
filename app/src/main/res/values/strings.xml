@@ -51,8 +51,10 @@
     <string name="short_thousands">%d тыс</string>
     <string name="onboarding_title">Tiyin ткёт ваши траты из банковских SMS</string>
     <string name="onboarding_body">Каждая покупка становится ниткой своего цвета, месяц — полотном. Вводить ничего не нужно, категории проставляются сами.</string>
-    <string name="onboarding_privacy">Читаются только SMS от HUMO, UZCARD, Kapitalbank и Asakabank. Операции хранятся только на телефоне, коды подтверждения не сохраняются. Чтобы подобрать категорию, названия незнакомых магазинов приложение ищет на orginfo.uz.</string>
+    <string name="onboarding_privacy">Читаются только SMS от HUMO, UZCARD, Kapitalbank, Asakabank и Payme. Операции хранятся только на телефоне, коды подтверждения не сохраняются. Чтобы подобрать категорию, названия незнакомых магазинов приложение ищет на orginfo.uz.</string>
     <string name="allow_sms">Разрешить чтение SMS</string>
+    <string name="continue_without_sms">Продолжить без SMS</string>
+    <string name="sms_settings_hint">Доступ к SMS выключен. Включите его для Tiyin в настройках телефона.</string>
     <string name="import_cannot_open">Не удалось открыть файл</string>
     <string name="import_not_payme">Это не выгрузка Payme. Нужен файл, который Payme сохраняет при выгрузке в Excel.</string>
     <string name="import_empty">В выгрузке Payme нет операций</string>
