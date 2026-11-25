@@ -1,5 +1,6 @@
 package uz.tiyin
 
+import android.content.res.Resources
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,25 +19,20 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import android.content.res.Resources
-import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import uz.tiyin.core.Categories
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -45,21 +41,28 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.path
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import java.time.LocalDate
+import java.time.YearMonth
+import kotlinx.coroutines.launch
+import uz.tiyin.core.Categories
 import uz.tiyin.core.Kind
 import uz.tiyin.core.Ledger
 import uz.tiyin.core.Money
 import uz.tiyin.core.Txn
-import java.time.LocalDate
-import java.time.YearMonth
 
 private val numeric = TextStyle(fontFamily = Jost, fontFeatureSettings = "tnum")
 
@@ -138,11 +141,13 @@ private fun PaymePrompt(text: String, onImport: () -> Unit) {
     }
 }
 
-private fun LazyListScope.categoryRows(rows: List<Ledger.CategoryTotal>, selected: String? = null, onTap: ((String) -> Unit)? = null) {
+private fun LazyListScope.categoryRows(
+    rows: List<Ledger.CategoryTotal>, selected: String? = null, canTap: (String) -> Boolean = { true }, onTap: ((String) -> Unit)? = null,
+) {
     items(rows, key = { "cat-${it.category}-${it.total.currency}" }) { c ->
         val p = LocalPalette.current
         val on = c.category == selected
-        val tap = if (onTap == null) Modifier else Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) p.track else Color.Transparent)
+        val tap = if (onTap == null || !canTap(c.category)) Modifier else Modifier.clip(RoundedCornerShape(4.dp)).background(if (on) p.track else Color.Transparent)
             .clickable(onClickLabel = stringResource(if (on) R.string.filter_clear else R.string.filter_category), role = Role.Button) { onTap(c.category) }
         Row(Modifier.fillMaxWidth().heightIn(min = 42.dp).then(tap), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(14.dp, 22.dp).background(p.dye(c.category)))
@@ -309,12 +314,12 @@ private class MonthData(ledger: Ledger, ym: YearMonth) {
     val days = txns.groupBy { it.at.toLocalDate() }
 }
 
-class MonthSummary(val ym: YearMonth, val som: Long, val threads: List<Strand>)
+class MonthSummary(val ym: YearMonth, val som: Long, val threads: List<Strand>, val byCategory: Map<String, Long>)
 
 fun monthSummaries(ledger: Ledger, year: Int, p: Palette): List<MonthSummary> = (1..12).map { m ->
     val period = Period.Month(YearMonth.of(year, m))
     val uzs = Ledger.totals(ledger.between(period.from, period.to), setOf(Kind.PURCHASE))["UZS"].orEmpty()
-    MonthSummary(period.ym, uzs.sumOf { it.total.minor }, threadsOf(uzs, p))
+    MonthSummary(period.ym, uzs.sumOf { it.total.minor }, threadsOf(uzs, p), uzs.associate { it.category to it.total.minor })
 }
 
 @Composable
@@ -324,11 +329,18 @@ fun YearScreen(ledger: Ledger, year: Int, today: LocalDate, onPick: () -> Unit, 
     val spend = remember(ledger, year) { Period.Year(year).let { Ledger.totals(ledger.between(it.from, it.to), setOf(Kind.PURCHASE)) } }
     val months = remember(ledger, year, p) { monthSummaries(ledger, year, p) }
     val withData = months.filter { it.som > 0 }
-    val max = months.maxOf { it.som }.coerceAtLeast(1)
     val total = sumOf(spend, "UZS")
     val others = otherCurrencies(spend, res.getString(R.string.and))
+    // Month bars are in som, so only a category with som spending can be shown by month.
+    val inSom = spend["UZS"].orEmpty().map { it.category }.toSet()
+    var picked by remember(year) { mutableStateOf<String?>(null) }
+    val only = picked?.takeIf { it in inSom }
+    fun shown(m: MonthSummary) = if (only == null) m.som else m.byCategory[only] ?: 0L
+    val max = months.maxOf(::shown).coerceAtLeast(1)
+    val list = rememberLazyListState()
+    val scope = rememberCoroutineScope()
 
-    LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp)) {
+    LazyColumn(Modifier.fillMaxSize().padding(horizontal = 20.dp), state = list) {
         item {
             PeriodHeader(
                 title = "$year", prevLabel = res.getString(R.string.year_n, year - 1), nextLabel = res.getString(R.string.year_n, year + 1),
@@ -342,21 +354,33 @@ fun YearScreen(ledger: Ledger, year: Int, today: LocalDate, onPick: () -> Unit, 
         }
         items(months, key = { "m-${it.ym}" }) { m ->
             val has = m.som > 0
+            val value = shown(m)
             Row(
                 Modifier.fillMaxWidth().heightIn(min = 34.dp).clickable(enabled = has, onClickLabel = res.getString(R.string.open_item, res.monthName(m.ym))) { onMonth(m.ym) },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(res.monthShort(m.ym), Modifier.width(40.dp), fontFamily = Golos, fontSize = 14.sp, color = if (has) p.ink else p.muted)
                 Box(Modifier.weight(1f).height(22.dp), contentAlignment = Alignment.CenterStart) {
-                    if (has) ClothSwatch(m.threads, p.track, Modifier.fillMaxWidth(m.som.toFloat() / max).fillMaxHeight())
+                    if (value > 0) {
+                        val threads = if (only == null) m.threads else listOf(Strand(1f, p.dye(only)))
+                        ClothSwatch(threads, p.track, Modifier.fillMaxWidth(value.toFloat() / max).fillMaxHeight())
+                    }
                 }
-                Text(if (has) res.millions(m.som) else "", Modifier.width(52.dp), style = numeric, fontSize = 15.sp, color = p.ink, textAlign = TextAlign.End)
+                Text(
+                    when { value <= 0 -> ""; only == null -> res.millions(value); else -> res.shortSom(value) },
+                    Modifier.width(if (only == null) 52.dp else 76.dp), style = numeric, fontSize = 15.sp, color = p.ink, textAlign = TextAlign.End,
+                )
             }
         }
         item {
-            Text(stringResource(R.string.year_footnote), Modifier.padding(start = 40.dp, top = 8.dp, bottom = 28.dp), fontFamily = Golos, fontSize = 13.sp, color = p.muted)
+            val note = if (only == null) stringResource(R.string.year_footnote) else stringResource(R.string.year_category_footnote, res.categoryLabel(only))
+            Text(note, Modifier.padding(start = 40.dp, top = 8.dp, bottom = 28.dp), fontFamily = Golos, fontSize = 13.sp, color = p.muted)
         }
-        categoryRows(spend.values.flatten())
+        categoryRows(spend.values.flatten(), only, canTap = { it in inSom }) {
+            picked = if (it == only) null else it
+            // The month bars sit above the categories; bring them into view so the change is visible.
+            if (picked != null) scope.launch { list.animateScrollToItem(1) }
+        }
         item { Spacer(Modifier.height(40.dp)) }
     }
 }
