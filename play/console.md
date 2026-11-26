@@ -10,7 +10,7 @@ A personal developer account created after 13 November 2023 must run a **closed 
 
 ## Privacy policy
 
-https://ndrewnee.github.io/tiyin-privacy/
+https://ndrewnee.github.io/tiyin/privacy/
 
 ## App access
 
