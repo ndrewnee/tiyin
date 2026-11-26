@@ -8,11 +8,11 @@ import kotlin.test.assertNull
 class MarksTest {
     private val at = LocalDateTime.of(2026, 10, 2, 16, 4, 30)
 
-    private fun op(supplier: String, amount: Long, category: String, at: LocalDateTime, debit: Boolean = true, card: String? = "1610") =
+    private fun op(supplier: String, amount: Long, category: String, at: LocalDateTime, debit: Boolean = true, card: String? = "1111") =
         PaymeOp(at, debit, supplier, supplier, Money(amount * 100, "UZS"), category, card, "Test Humo", viaPayme = false)
 
     private fun humo(op: String, amount: String, merchant: String, time: String) =
-        Sms("HUMO", "HUMOCARD *1610: $op $amount UZS; $merchant; $time;  Dostupno: 5000000.00 UZS", LocalDateTime.of(2026, 10, 3, 9, 0))
+        Sms("HUMO", "HUMOCARD *1111: $op $amount UZS; $merchant; $time;  Dostupno: 5000000.00 UZS", LocalDateTime.of(2026, 10, 3, 9, 0))
 
     private val ops = listOf(
         op("Перевод с карты", 219_000_000, "перевод", at),

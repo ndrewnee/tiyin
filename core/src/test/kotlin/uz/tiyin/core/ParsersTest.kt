@@ -78,7 +78,7 @@ class ParsersTest {
 
     @Test
     fun kapitalbankShortNumber() {
-        val body = "Snyatiye, 15.11.26 v 14:32. Karta (*3333). Summa: 100.00 USD. VISA MC USD 2 HUMO KB>Tashkent UZ. Dostupno: 534.73 USD"
+        val body = "Snyatiye, 15.11.26 v 14:32. Karta (*3333). Summa: 100.00 USD. VISA MC USD 2 HUMO KB>Tashkent UZ. Dostupno: 100.00 USD"
         val out = parsed("2212", body)
         assertEquals("KAPITALBANK", out.bank)
         assertEquals(Kind.OWN_TRANSFER, out.kind)
