@@ -173,7 +173,7 @@ private fun LazyListScope.categoryRows(
             Box(Modifier.size(14.dp, 22.dp).background(p.dye(c.category)))
             Text(
                 resources().categoryLabel(c.category), Modifier.weight(1f).padding(start = 12.dp, end = 6.dp),
-                fontFamily = Golos, fontSize = 16.sp, color = p.ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                fontFamily = Golos, fontSize = 16.sp, color = p.ink, maxLines = 2, overflow = TextOverflow.Ellipsis,
                 fontWeight = if (on) FontWeight.SemiBold else null,
             )
             Text("${c.count}", Modifier.padding(end = 12.dp), fontFamily = Golos, fontSize = 14.sp, color = p.muted)
